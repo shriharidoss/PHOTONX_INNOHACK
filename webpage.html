@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telemedicine Health Kiosk</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #e8f7ff, #f1fff7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            color: #16324f;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1050px;
+            background: white;
+            border-radius: 24px;
+            padding: 45px;
+            box-shadow: 0 15px 45px rgba(0, 80, 120, 0.14);
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 58px;
+            margin-bottom: 8px;
+        }
+
+        h1 {
+            color: #123b5d;
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            font-size: 17px;
+            margin-bottom: 28px;
+        }
+
+        .backend-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 16px;
+            border-radius: 999px;
+            background: #f1f5f9;
+            color: #64748b;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 35px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #94a3b8;
+        }
+
+        .backend-status.online {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .backend-status.online .status-dot {
+            background: #22c55e;
+        }
+
+        .backend-status.offline {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .backend-status.offline .status-dot {
+            background: #ef4444;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            justify-content: center;
+        }
+
+        .card {
+            padding: 32px 26px;
+            border: 1px solid #dbe7ee;
+            border-radius: 18px;
+            background: #ffffff;
+            transition: 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 28px rgba(0, 80, 120, 0.12);
+        }
+
+        .card-icon {
+            font-size: 52px;
+            margin-bottom: 16px;
+        }
+
+        .card h2 {
+            color: #173f5f;
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            color: #71808f;
+            margin-bottom: 22px;
+            line-height: 1.5;
+        }
+
+        button,
+        .link-button {
+            display: inline-block;
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 9px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            background: #1479b8;
+            color: white;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+
+        button:hover,
+        .link-button:hover {
+            background: #0e5f92;
+        }
+
+        .patient-button {
+            background: #15966c;
+        }
+
+        .patient-button:hover {
+            background: #12805b;
+        }
+
+        .doctor-button {
+            background: #1479b8;
+        }
+
+        .health-button {
+            background: #7c3aed;
+        }
+
+        .health-button:hover {
+            background: #6d28d9;
+        }
+
+        .quick-tools {
+            margin-top: 25px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .quick-tools button {
+            background: #64748b;
+            font-size: 14px;
+            padding: 12px;
+        }
+
+        .message {
+            min-height: 20px;
+            margin-top: 15px;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .footer {
+            margin-top: 32px;
+            color: #8a98a5;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 700px) {
+            .options {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 29px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="logo">🏥</div>
+
+    <h1>Telemedicine Health Kiosk</h1>
+
+    <p class="subtitle">
+        Solar-powered IoT healthcare access with remote patient monitoring
+        and doctor consultation
+    </p>
+
+    <div id="backendStatus" class="backend-status">
+        <span class="status-dot"></span>
+        <span id="statusText">Checking backend...</span>
+    </div>
+
+    <div class="options">
+
+        <!-- PATIENT -->
+        <div class="card">
+            <div class="card-icon">👤</div>
+
+            <h2>Patient</h2>
+
+            <p>
+                Register or access your healthcare record, perform a health
+                check, view vitals and request a doctor consultation.
+            </p>
+
+            <button class="patient-button" onclick="openPatient()">
+                Continue as Patient
+            </button>
+        </div>
+
+        <!-- DOCTOR -->
+        <div class="card">
+            <div class="card-icon">👨‍⚕️</div>
+
+            <h2>Doctor</h2>
+
+            <p>
+                Access the doctor dashboard, review patients and vitals,
+                and provide remote video consultation.
+            </p>
+
+            <button class="doctor-button" onclick="openDoctor()">
+                Continue as Doctor
+            </button>
+        </div>
+
+    </div>
+
+    <div class="quick-tools">
+        <button class="health-button" onclick="openHealthCheck()">
+            ❤️ Open Health Check
+        </button>
+
+        <button onclick="checkBackend(true)">
+            🔄 Check Backend Connection
+        </button>
+    </div>
+
+    <div id="message" class="message"></div>
+
+    <div class="footer">
+        <strong>INNOHACK 2.0</strong><br>
+        Solar-powered IoT Telemedicine Kiosk for Rural Healthcare Access
+    </div>
+
+</div>
+
+<script>
+    /*
+     * This launcher is located at:
+     *
+     * PHOTONX_INNOHACK/
+     * └── webpage.html
+     *
+     * Frontend files are expected at:
+     *
+     * PHOTONX_INNOHACK/
+     * └── frontend/
+     *     ├── patient.html
+     *     ├── docot.html
+     *     └── health_check.html
+     */
+
+    const BACKEND_URL = "http://127.0.0.1:5000";
+
+    function openPatient() {
+        window.location.href = "frontend/patient.html";
+    }
+
+    function openDoctor() {
+        window.location.href = "frontend/docot.html";
+    }
+
+    function openHealthCheck() {
+        window.location.href = "frontend/health_check.html";
+    }
+
+    async function checkBackend(showMessage = false) {
+        const status = document.getElementById("backendStatus");
+        const statusText = document.getElementById("statusText");
+        const message = document.getElementById("message");
+
+        status.classList.remove("online", "offline");
+        statusText.textContent = "Checking backend...";
+
+        try {
+            const response = await fetch(
+                `${BACKEND_URL}/api/health`,
+                {
+                    method: "GET",
+                    cache: "no-store"
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.status !== "success") {
+                throw new Error("Backend returned an unexpected response.");
+            }
+
+            status.classList.add("online");
+            statusText.textContent = "Backend Online";
+
+            if (showMessage) {
+                message.textContent =
+                    "✓ Flask backend is running on port 5000.";
+            }
+
+        } catch (error) {
+            status.classList.add("offline");
+            statusText.textContent = "Backend Offline";
+
+            if (showMessage) {
+                message.textContent =
+                    "Start health_kiosk_backend/app.py before using patient or doctor features.";
+            }
+        }
+    }
+
+    // Check automatically when the kiosk opens.
+    checkBackend(false);
+</script>
+
+</body>
+</html>
