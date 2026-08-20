@@ -1,0 +1,13 @@
+Your ESP32 should eventually send a CSV like:
+
+timestamp,ir,red
+1000,52341,41235
+1010,52410,41302
+1020,52520,41400
+
+For the BP model, only the IR column is used as PPG input.
+
+The model expects:
+- 100 samples/second
+- approximately 800 IR samples
+- 8 seconds of data
