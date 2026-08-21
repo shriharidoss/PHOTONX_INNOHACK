@@ -1,0 +1,2030 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Health Check</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(
+                135deg,
+                #e8f7ff,
+                #f1fff7
+            );
+            color: #16324f;
+        }
+
+        header {
+            background: white;
+            padding: 20px 40px;
+            box-shadow:
+                0 3px 12px
+                rgba(0, 80, 120, 0.10);
+        }
+
+        header h1 {
+            margin: 0;
+            color: #087ea4;
+        }
+
+        header p {
+            color: #71818a;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 40px auto;
+        }
+
+        .card {
+            background: white;
+            padding: 35px;
+            border-radius: 18px;
+            box-shadow:
+                0 5px 20px
+                rgba(0, 80, 120, 0.10);
+            margin-bottom: 25px;
+        }
+
+        h2 {
+            color: #087ea4;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #b8e4f2;
+            border-radius: 9px;
+            font-size: 18px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #38bdf8;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 9px;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background: #9bb9b0 !important;
+            cursor: not-allowed;
+        }
+
+        #startButton {
+            background: #15966c;
+            color: white;
+        }
+
+        #startButton:hover {
+            background: #12805b;
+        }
+
+        .message {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 9px;
+            font-weight: bold;
+        }
+
+        .success {
+            background: #e4f9ef;
+            color: #12805b;
+        }
+
+        .error {
+            background: #ffe7e5;
+            color: #b42318;
+        }
+
+        .measuring {
+            background: #eefaff;
+            color: #087ea4;
+        }
+
+        #patientInfo {
+            display: none;
+        }
+
+        .patient-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .patient-box {
+            background: #f7fcfd;
+            padding: 18px;
+            border-radius: 10px;
+            border: 1px solid #d9eef5;
+        }
+
+        .patient-box small {
+            display: block;
+            color: #71818a;
+            margin-bottom: 6px;
+        }
+
+        .patient-box strong {
+            font-size: 18px;
+        }
+
+        /* ==========================================
+           HEALTH OPTIONS
+        ========================================== */
+
+        #healthOptions {
+            display: none;
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 1px solid #d9eef5;
+        }
+
+        .option-title {
+            color: #087ea4;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .option-description {
+            color: #71818a;
+            margin-bottom: 10px;
+        }
+
+        .option-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .option-buttons button {
+            margin-top: 10px;
+        }
+
+        #previousButton {
+            background: #087ea4;
+            color: white;
+        }
+
+        #previousButton:hover {
+            background: #066b8b;
+        }
+
+        #newMeasurementButton {
+            background: #15966c;
+            color: white;
+        }
+
+        #newMeasurementButton:hover {
+            background: #12805b;
+        }
+
+        /* ==========================================
+           RESULTS
+        ========================================== */
+
+        #results {
+            display: none;
+        }
+
+        .vitals-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .vital {
+            padding: 25px;
+            background: #f7fcfd;
+            border: 1px solid #d9eef5;
+            border-radius: 12px;
+        }
+
+        .vital h3 {
+            color: #087ea4;
+            margin-top: 0;
+        }
+
+        .value {
+            font-size: 30px;
+            font-weight: bold;
+            color: #15966c;
+        }
+
+        /* ==========================================
+           PREVIOUS READINGS
+        ========================================== */
+
+        #previousReadings {
+            display: none;
+        }
+
+        .reading-card {
+            background: #f7fcfd;
+            border: 1px solid #d9eef5;
+            border-radius: 12px;
+            padding: 22px;
+            margin-bottom: 15px;
+        }
+
+        .reading-card h3 {
+            margin-top: 0;
+            color: #087ea4;
+        }
+
+        .reading-time {
+            color: #71818a;
+            margin-bottom: 15px;
+        }
+
+        .reading-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .reading-value {
+            background: white;
+            padding: 14px;
+            border-radius: 8px;
+            border: 1px solid #e1eef3;
+        }
+
+        .reading-value span {
+            display: block;
+            color: #71818a;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+
+        .reading-value strong {
+            color: #15966c;
+            font-size: 18px;
+        }
+
+        /* ==========================================
+           NEW MEASUREMENT
+        ========================================== */
+
+        #newMeasurementSection {
+            display: none;
+        }
+
+        .measurement-status {
+            background: #eefaff;
+            border: 1px solid #b8e4f2;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .measurement-icon {
+            font-size: 45px;
+            margin-bottom: 10px;
+        }
+
+        .measurement-status h3 {
+            color: #087ea4;
+            margin: 5px 0 10px;
+        }
+
+        .measurement-status p {
+            color: #71818a;
+        }
+
+        .sensor-status {
+            margin: 20px auto;
+            max-width: 600px;
+            padding: 18px;
+            border-radius: 10px;
+            background: white;
+            border: 1px solid #d9eef5;
+            color: #087ea4;
+            font-weight: bold;
+        }
+
+        .back-button {
+            background: #71818a;
+            color: white;
+        }
+
+        .back-button:hover {
+            background: #5d6d75;
+        }
+
+        @media (max-width: 800px) {
+
+            .patient-grid,
+            .reading-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+        }
+
+        @media (max-width: 600px) {
+
+            .container {
+                width: 94%;
+            }
+
+            .card {
+                padding: 25px;
+            }
+
+            .patient-grid,
+            .vitals-grid,
+            .reading-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .option-buttons {
+                flex-direction: column;
+            }
+
+            .option-buttons button {
+                width: 100%;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- ==================================================
+     HEADER
+================================================== -->
+
+<header>
+
+    <h1>
+        🏥 Health Check
+    </h1>
+
+    <p>
+        Verify your patient information and access your
+        health measurements.
+    </p>
+
+</header>
+
+
+<div class="container">
+
+
+    <!-- ==================================================
+         PATIENT ID CARD
+    ================================================== -->
+
+    <div class="card">
+
+        <h2>
+            Start Health Check
+        </h2>
+
+        <p>
+            Enter the Patient ID generated during registration.
+        </p>
+
+        <label for="patientId">
+            Patient ID
+        </label>
+
+        <input
+            type="number"
+            id="patientId"
+            placeholder="Enter Patient ID"
+            min="1"
+        >
+
+        <button
+            id="startButton"
+            onclick="startHealthCheck()">
+
+            Check Patient
+
+        </button>
+
+        <div
+            id="message"
+            class="message">
+        </div>
+
+
+        <!-- ==============================================
+             HEALTH OPTIONS
+        =============================================== -->
+
+        <div
+            id="healthOptions">
+
+            <div class="option-title">
+
+                What would you like to do?
+
+            </div>
+
+            <div class="option-description">
+
+                You can view your previous health readings
+                or start a new measurement.
+
+            </div>
+
+            <div class="option-buttons">
+
+                <button
+                    type="button"
+                    id="previousButton"
+                    onclick="viewPreviousReadings()">
+
+                    📋 VIEW PREVIOUS READINGS
+
+                </button>
+
+                <button
+                    type="button"
+                    id="newMeasurementButton"
+                    onclick="startNewMeasurement()">
+
+                    ❤️ START NEW MEASUREMENT
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ==================================================
+         PATIENT INFORMATION
+    ================================================== -->
+
+    <div
+        class="card"
+        id="patientInfo">
+
+        <h2>
+            Patient Information
+        </h2>
+
+        <div class="patient-grid">
+
+            <div class="patient-box">
+
+                <small>
+                    Patient ID
+                </small>
+
+                <strong id="displayId">
+                    --
+                </strong>
+
+            </div>
+
+            <div class="patient-box">
+
+                <small>
+                    Name
+                </small>
+
+                <strong id="displayName">
+                    --
+                </strong>
+
+            </div>
+
+            <div class="patient-box">
+
+                <small>
+                    Age
+                </small>
+
+                <strong id="displayAge">
+                    --
+                </strong>
+
+            </div>
+
+            <div class="patient-box">
+
+                <small>
+                    Gender
+                </small>
+
+                <strong id="displayGender">
+                    --
+                </strong>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ==================================================
+         PREVIOUS READINGS
+    ================================================== -->
+
+    <div
+        class="card"
+        id="previousReadings">
+
+        <h2>
+            📋 Previous Health Readings
+        </h2>
+
+        <p style="color:#71818a;">
+
+            These readings are retrieved from the
+            database for this patient.
+
+        </p>
+
+        <div id="previousReadingsList">
+        </div>
+
+    </div>
+
+
+    <!-- ==================================================
+         NEW MEASUREMENT
+    ================================================== -->
+
+    <div
+        class="card"
+        id="newMeasurementSection">
+
+        <h2>
+            ❤️ New Health Measurement
+        </h2>
+
+        <div class="measurement-status">
+
+            <div class="measurement-icon">
+                🩺
+            </div>
+
+            <h3>
+                Measurement Ready
+            </h3>
+
+            <p>
+
+                Patient ID:
+
+                <strong id="measurementPatientId">
+                    --
+                </strong>
+
+            </p>
+
+            <p>
+
+                A measurement session has been created.
+                Please place your finger on the
+                MAX30102 sensor and remain still.
+
+            </p>
+
+            <div
+                id="sensorStatus"
+                class="sensor-status">
+
+                Waiting to start measurement...
+
+            </div>
+
+            <button
+                type="button"
+                id="measurementReadyButton"
+                onclick="beginSensorMeasurement()">
+
+                START SENSOR MEASUREMENT
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- ==================================================
+         LATEST RESULT
+    ================================================== -->
+
+    <div
+        class="card"
+        id="results">
+
+        <h2>
+            Latest Health Measurement
+        </h2>
+
+        <div class="vitals-grid">
+
+            <div class="vital">
+
+                <h3>
+                    🌡 Temperature
+                </h3>
+
+                <div
+                    class="value"
+                    id="temperature">
+
+                    -- °C
+
+                </div>
+
+            </div>
+
+            <div class="vital">
+
+                <h3>
+                    ❤️ Heart Rate
+                </h3>
+
+                <div
+                    class="value"
+                    id="heartRate">
+
+                    -- BPM
+
+                </div>
+
+            </div>
+
+            <div class="vital">
+
+                <h3>
+                    🫁 SpO₂
+                </h3>
+
+                <div
+                    class="value"
+                    id="spo2">
+
+                    -- %
+
+                </div>
+
+            </div>
+
+            <div class="vital">
+
+                <h3>
+                    💓 Blood Pressure
+                </h3>
+
+                <div
+                    class="value"
+                    id="bloodPressure">
+
+                    -- / -- mmHg
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div
+            id="saveMessage"
+            class="message">
+        </div>
+
+    </div>
+
+
+</div>
+
+
+<script>
+
+/*
+====================================================
+FLASK BACKEND
+====================================================
+*/
+
+const API_BASE_URL =
+    "http://127.0.0.1:5000";
+
+
+/*
+====================================================
+CURRENT PATIENT
+====================================================
+*/
+
+let currentPatientId = null;
+
+
+/*
+====================================================
+RESULT POLLING
+====================================================
+*/
+
+let resultPollingTimer = null;
+
+let resultPollingAttempts = 0;
+
+const MAX_POLLING_ATTEMPTS = 90;
+
+
+/*
+====================================================
+SHOW MESSAGE
+====================================================
+*/
+
+function showMessage(
+    text,
+    type
+) {
+
+    const message =
+        document.getElementById(
+            "message"
+        );
+
+    message.textContent =
+        text;
+
+    message.className =
+        "message " + type;
+
+    message.style.display =
+        "block";
+}
+
+
+/*
+====================================================
+SET SENSOR STATUS
+====================================================
+*/
+
+function setSensorStatus(
+    text
+) {
+
+    document.getElementById(
+        "sensorStatus"
+    ).textContent =
+        text;
+}
+
+
+/*
+====================================================
+START / VERIFY PATIENT
+====================================================
+*/
+
+async function startHealthCheck() {
+
+    const patientId =
+        document
+            .getElementById(
+                "patientId"
+            )
+            .value
+            .trim();
+
+
+    if (!patientId) {
+
+        showMessage(
+            "Please enter Patient ID.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    const button =
+        document.getElementById(
+            "startButton"
+        );
+
+
+    button.disabled =
+        true;
+
+    button.textContent =
+        "Checking Patient...";
+
+
+    try {
+
+        const response =
+            await fetch(
+
+                `${API_BASE_URL}/api/patients/${encodeURIComponent(patientId)}`
+
+            );
+
+
+        const result =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+
+                result.message ||
+                result.error ||
+                "Patient not found."
+
+            );
+
+        }
+
+
+        if (
+            !result.success ||
+            !result.patient
+        ) {
+
+            throw new Error(
+                "Patient not found."
+            );
+
+        }
+
+
+        currentPatientId =
+            result.patient.patient_id;
+
+
+        /*
+        Save patient ID
+        */
+
+        localStorage.setItem(
+            "patient_id",
+            currentPatientId
+        );
+
+        localStorage.setItem(
+            "health_check_patient_id",
+            currentPatientId
+        );
+
+
+        const patient =
+            result.patient;
+
+
+        /*
+        Display patient information
+        */
+
+        document.getElementById(
+            "displayId"
+        ).textContent =
+            patient.patient_id;
+
+
+        document.getElementById(
+            "displayName"
+        ).textContent =
+            patient.name;
+
+
+        document.getElementById(
+            "displayAge"
+        ).textContent =
+            patient.age;
+
+
+        document.getElementById(
+            "displayGender"
+        ).textContent =
+            patient.gender;
+
+
+        document.getElementById(
+            "patientInfo"
+        ).style.display =
+            "block";
+
+
+        /*
+        Show options
+        */
+
+        document.getElementById(
+            "healthOptions"
+        ).style.display =
+            "block";
+
+
+        /*
+        Hide check button
+        */
+
+        button.style.display =
+            "none";
+
+
+        showMessage(
+            "Patient verified successfully. Choose an option below.",
+            "success"
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "PATIENT VERIFICATION ERROR:",
+            error
+        );
+
+
+        showMessage(
+            error.message,
+            "error"
+        );
+
+
+        button.disabled =
+            false;
+
+        button.textContent =
+            "Check Patient";
+    }
+}
+
+
+/*
+====================================================
+VIEW PREVIOUS READINGS
+====================================================
+*/
+
+async function viewPreviousReadings() {
+
+    if (!currentPatientId) {
+
+        showMessage(
+            "Please verify the patient first.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    const button =
+        document.getElementById(
+            "previousButton"
+        );
+
+
+    button.disabled =
+        true;
+
+    button.textContent =
+        "Loading Readings...";
+
+
+    try {
+
+        const response =
+            await fetch(
+
+                `${API_BASE_URL}/api/vitals/${encodeURIComponent(currentPatientId)}`
+
+            );
+
+
+        const result =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+
+                result.message ||
+                result.error ||
+                "Unable to load readings."
+
+            );
+
+        }
+
+
+        const readings =
+            Array.isArray(result.readings)
+                ? result.readings
+                : [];
+
+
+        displayPreviousReadings(
+            readings
+        );
+
+
+        if (
+            readings.length === 0
+        ) {
+
+            showMessage(
+                "No previous readings found.",
+                "measuring"
+            );
+
+        }
+        else {
+
+            showMessage(
+                "Previous readings loaded successfully.",
+                "success"
+            );
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "PREVIOUS READINGS ERROR:",
+            error
+        );
+
+
+        showMessage(
+            "Failed to load readings: " +
+            error.message,
+            "error"
+        );
+
+    }
+
+    finally {
+
+        button.disabled =
+            false;
+
+        button.textContent =
+            "📋 VIEW PREVIOUS READINGS";
+
+    }
+}
+
+
+/*
+====================================================
+DISPLAY PREVIOUS READINGS
+====================================================
+*/
+
+function displayPreviousReadings(
+    readings
+) {
+
+    const section =
+        document.getElementById(
+            "previousReadings"
+        );
+
+
+    const list =
+        document.getElementById(
+            "previousReadingsList"
+        );
+
+
+    section.style.display =
+        "block";
+
+
+    list.innerHTML =
+        "";
+
+
+    if (
+        readings.length === 0
+    ) {
+
+        list.innerHTML = `
+
+            <div
+                class="message measuring"
+                style="display:block;">
+
+                No previous health readings
+                were found for this patient.
+
+            </div>
+
+        `;
+
+        return;
+    }
+
+
+    readings.forEach(
+        function(reading, index) {
+
+            const card =
+                document.createElement(
+                    "div"
+                );
+
+
+            card.className =
+                "reading-card";
+
+
+            const readingTime =
+                reading.reading_time ||
+                reading.created_at ||
+                reading.timestamp ||
+                "Time unavailable";
+
+
+            const temperature =
+
+                reading.temperature !== null &&
+                reading.temperature !== undefined
+
+                    ? `${reading.temperature} °C`
+                    : "-- °C";
+
+
+            const heartRate =
+
+                reading.heart_rate !== null &&
+                reading.heart_rate !== undefined
+
+                    ? `${reading.heart_rate} BPM`
+                    : "-- BPM";
+
+
+            const spo2 =
+
+                reading.spo2 !== null &&
+                reading.spo2 !== undefined
+
+                    ? `${reading.spo2} %`
+                    : "-- %";
+
+
+            const bloodPressure =
+
+                reading.systolic_bp !== null &&
+                reading.systolic_bp !== undefined &&
+                reading.diastolic_bp !== null &&
+                reading.diastolic_bp !== undefined
+
+                    ? `${reading.systolic_bp} / ${reading.diastolic_bp} mmHg`
+                    : "-- / -- mmHg";
+
+
+            card.innerHTML = `
+
+                <h3>
+                    Reading ${index + 1}
+                </h3>
+
+                <div class="reading-time">
+
+                    🕒 ${escapeHtml(
+                        formatDate(readingTime)
+                    )}
+
+                </div>
+
+                <div class="reading-grid">
+
+                    <div class="reading-value">
+
+                        <span>
+                            🌡 Temperature
+                        </span>
+
+                        <strong>
+                            ${escapeHtml(
+                                temperature
+                            )}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="reading-value">
+
+                        <span>
+                            ❤️ Heart Rate
+                        </span>
+
+                        <strong>
+                            ${escapeHtml(
+                                heartRate
+                            )}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="reading-value">
+
+                        <span>
+                            🫁 SpO₂
+                        </span>
+
+                        <strong>
+                            ${escapeHtml(
+                                spo2
+                            )}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="reading-value">
+
+                        <span>
+                            💓 Blood Pressure
+                        </span>
+
+                        <strong>
+                            ${escapeHtml(
+                                bloodPressure
+                            )}
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            `;
+
+
+            list.appendChild(
+                card
+            );
+
+        }
+    );
+}
+
+
+/*
+====================================================
+START NEW MEASUREMENT
+====================================================
+*/
+
+async function startNewMeasurement() {
+
+    if (!currentPatientId) {
+
+        showMessage(
+            "Please verify the patient first.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    const button =
+        document.getElementById(
+            "newMeasurementButton"
+        );
+
+
+    button.disabled =
+        true;
+
+    button.textContent =
+        "CREATING MEASUREMENT SESSION...";
+
+
+    try {
+
+        console.log(
+            "================================"
+        );
+
+        console.log(
+            "CREATING MEASUREMENT SESSION"
+        );
+
+        console.log(
+            "Patient ID:",
+            currentPatientId
+        );
+
+        console.log(
+            "================================"
+        );
+
+
+        /*
+        ==========================================
+        CREATE SESSION IN FLASK
+        ==========================================
+        */
+
+        const response =
+            await fetch(
+
+                `${API_BASE_URL}/api/measurement-session`,
+
+                {
+                    method: "POST",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json"
+
+                    },
+
+                    body:
+                        JSON.stringify({
+
+                            patient_id:
+                                Number(
+                                    currentPatientId
+                                )
+
+                        })
+
+                }
+            );
+
+
+        const result =
+            await response.json();
+
+
+        console.log(
+            "Measurement session response:",
+            result
+        );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+
+                result.message ||
+                result.error ||
+                `HTTP ${response.status}`
+
+            );
+
+        }
+
+
+        if (
+            result.status !== "success"
+        ) {
+
+            throw new Error(
+
+                result.message ||
+                "Measurement session was not created."
+
+            );
+
+        }
+
+
+        /*
+        ==========================================
+        CONFIRM PATIENT ID
+        ==========================================
+        */
+
+        currentPatientId =
+            result.patient_id;
+
+
+        localStorage.setItem(
+            "patient_id",
+            currentPatientId
+        );
+
+        localStorage.setItem(
+            "health_check_patient_id",
+            currentPatientId
+        );
+
+
+        /*
+        ==========================================
+        SHOW MEASUREMENT SECTION
+        ==========================================
+        */
+
+        document.getElementById(
+            "measurementPatientId"
+        ).textContent =
+            currentPatientId;
+
+
+        document.getElementById(
+            "newMeasurementSection"
+        ).style.display =
+            "block";
+
+
+        setSensorStatus(
+            "Measurement session created. Ready to start sensor measurement."
+        );
+
+
+        document.getElementById(
+            "newMeasurementSection"
+        ).scrollIntoView({
+
+            behavior:
+                "smooth"
+
+        });
+
+
+        showMessage(
+
+            "Measurement session created successfully.",
+
+            "success"
+
+        );
+
+
+        button.textContent =
+            "SESSION CREATED";
+
+
+        /*
+        ==========================================
+        ENABLE SENSOR BUTTON
+        ==========================================
+        */
+
+        const sensorButton =
+            document.getElementById(
+                "measurementReadyButton"
+            );
+
+
+        sensorButton.disabled =
+            false;
+
+
+        sensorButton.textContent =
+            "START SENSOR MEASUREMENT";
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "MEASUREMENT SESSION ERROR:",
+            error
+        );
+
+
+        showMessage(
+
+            "Failed to create measurement session: " +
+            error.message,
+
+            "error"
+
+        );
+
+
+        button.disabled =
+            false;
+
+
+        button.textContent =
+            "❤️ START NEW MEASUREMENT";
+
+    }
+}
+
+
+/*
+====================================================
+BEGIN SENSOR MEASUREMENT
+====================================================
+*/
+
+function beginSensorMeasurement() {
+
+    if (!currentPatientId) {
+
+        showMessage(
+            "Patient ID is missing.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    const button =
+        document.getElementById(
+            "measurementReadyButton"
+        );
+
+
+    button.disabled =
+        true;
+
+
+    button.textContent =
+        "MEASUREMENT IN PROGRESS...";
+
+
+    setSensorStatus(
+        "Keep your finger still. Sensor measurement is in progress..."
+    );
+
+
+    showMessage(
+
+        "Measurement started for Patient ID " +
+        currentPatientId +
+        ". Keep your finger on the MAX30102.",
+
+        "measuring"
+
+    );
+
+
+    console.log(
+        "SENSOR MEASUREMENT STARTED"
+    );
+
+    console.log(
+        "Patient ID:",
+        currentPatientId
+    );
+
+
+    /*
+    ==================================================
+    IMPORTANT
+    ==================================================
+
+    The browser cannot directly execute the
+    Python/ESP32 program.
+
+    Your existing process is:
+
+    ESP32
+       ↓
+    ppg_recording.csv
+       ↓
+    analyze_vitals.py
+       ↓
+    vitals_result.json
+       ↓
+    send_to_backend.py
+       ↓
+    Flask /api/vitals
+       ↓
+    MySQL
+
+    After send_to_backend.py stores the result,
+    this page automatically checks the database.
+    */
+
+
+    startResultPolling();
+}
+
+
+/*
+====================================================
+POLL DATABASE FOR RESULT
+====================================================
+*/
+
+function startResultPolling() {
+
+    if (resultPollingTimer) {
+
+        clearInterval(
+            resultPollingTimer
+        );
+
+    }
+
+
+    resultPollingAttempts =
+        0;
+
+
+    setSensorStatus(
+        "Waiting for the sensor result..."
+    );
+
+
+    resultPollingTimer =
+        setInterval(
+
+            async function() {
+
+                resultPollingAttempts++;
+
+
+                await checkMeasurementResult();
+
+
+                if (
+                    resultPollingAttempts >=
+                    MAX_POLLING_ATTEMPTS
+                ) {
+
+                    clearInterval(
+                        resultPollingTimer
+                    );
+
+
+                    setSensorStatus(
+
+                        "No new result yet. Complete the sensor processing and press Check Result."
+
+                    );
+
+                }
+
+            },
+
+            2000
+
+        );
+}
+
+
+/*
+====================================================
+CHECK DATABASE RESULT
+====================================================
+*/
+
+async function checkMeasurementResult() {
+
+    if (!currentPatientId) {
+
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+
+                `${API_BASE_URL}/api/vitals/${encodeURIComponent(currentPatientId)}`
+
+            );
+
+
+        const result =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            return;
+        }
+
+
+        const readings =
+            Array.isArray(
+                result.readings
+            )
+                ? result.readings
+                : [];
+
+
+        /*
+        No readings
+        */
+
+        if (
+            readings.length === 0
+        ) {
+
+            return;
+        }
+
+
+        /*
+        Latest reading
+        */
+
+        const latestReading =
+            readings[0];
+
+
+        /*
+        Display result
+        */
+
+        displayResults(
+            latestReading
+        );
+
+
+        /*
+        Stop polling
+        */
+
+        if (resultPollingTimer) {
+
+            clearInterval(
+                resultPollingTimer
+            );
+
+        }
+
+
+        setSensorStatus(
+            "✅ Measurement completed successfully!"
+        );
+
+
+        showMessage(
+
+            "Health measurement completed and saved successfully.",
+
+            "success"
+
+        );
+
+
+        /*
+        Reload previous readings
+        */
+
+        displayPreviousReadings(
+            readings
+        );
+
+
+        document.getElementById(
+            "previousReadings"
+        ).style.display =
+            "block";
+
+
+        /*
+        Scroll to result
+        */
+
+        document.getElementById(
+            "results"
+        ).scrollIntoView({
+
+            behavior:
+                "smooth"
+
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "RESULT CHECK ERROR:",
+            error
+        );
+
+    }
+}
+
+
+/*
+====================================================
+DISPLAY LATEST RESULT
+====================================================
+*/
+
+function displayResults(
+    reading
+) {
+
+    document.getElementById(
+        "temperature"
+    ).textContent =
+
+        reading.temperature !== null &&
+        reading.temperature !== undefined
+
+            ? `${reading.temperature} °C`
+
+            : "-- °C";
+
+
+    document.getElementById(
+        "heartRate"
+    ).textContent =
+
+        reading.heart_rate !== null &&
+        reading.heart_rate !== undefined
+
+            ? `${reading.heart_rate} BPM`
+
+            : "-- BPM";
+
+
+    document.getElementById(
+        "spo2"
+    ).textContent =
+
+        reading.spo2 !== null &&
+        reading.spo2 !== undefined
+
+            ? `${reading.spo2} %`
+
+            : "-- %";
+
+
+    document.getElementById(
+        "bloodPressure"
+    ).textContent =
+
+        reading.systolic_bp !== null &&
+        reading.systolic_bp !== undefined &&
+        reading.diastolic_bp !== null &&
+        reading.diastolic_bp !== undefined
+
+            ? `${reading.systolic_bp} / ${reading.diastolic_bp} mmHg`
+
+            : "-- / -- mmHg";
+
+
+    document.getElementById(
+        "results"
+    ).style.display =
+        "block";
+}
+
+
+/*
+====================================================
+FORMAT DATE
+====================================================
+*/
+
+function formatDate(
+    value
+) {
+
+    if (
+        !value ||
+        value === "Time unavailable"
+    ) {
+
+        return "Time unavailable";
+    }
+
+
+    const date =
+        new Date(value);
+
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+
+        return String(value);
+    }
+
+
+    return date.toLocaleString();
+}
+
+
+/*
+====================================================
+ESCAPE HTML
+====================================================
+*/
+
+function escapeHtml(
+    value
+) {
+
+    return String(value)
+
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+
+        .replace(
+            /</g,
+            "&lt;"
+        )
+
+        .replace(
+            />/g,
+            "&gt;"
+        )
+
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+}
+
+
+/*
+====================================================
+PAGE LOAD
+====================================================
+*/
+
+window.addEventListener(
+    "DOMContentLoaded",
+    function() {
+
+        const savedPatientId =
+            localStorage.getItem(
+                "patient_id"
+            );
+
+
+        if (savedPatientId) {
+
+            document.getElementById(
+                "patientId"
+            ).value =
+                savedPatientId;
+
+        }
+
+    }
+);
+
+</script>
+
+
+</body>
+
+</html>

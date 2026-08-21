@@ -1,0 +1,4208 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Doctor Dashboard - Health Screening Kiosk
+    </title>
+
+
+    <!-- =====================================================
+         PEERJS
+    ====================================================== -->
+
+    <script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(
+                135deg,
+                #e8f7ff,
+                #f1fff7
+            );
+            color: #16324f;
+        }
+
+
+        /* =====================================================
+           HEADER
+        ====================================================== */
+
+        header {
+            background-color: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 3px 12px rgba(
+                0,
+                80,
+                120,
+                0.10
+            );
+            border-bottom: 4px solid #38bdf8;
+        }
+
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+
+        .hospital-icon {
+            font-size: 42px;
+        }
+
+
+        header h1 {
+            margin: 0;
+            color: #087ea4;
+            font-size: 30px;
+        }
+
+
+        header p {
+            margin: 5px 0 0;
+            color: #5b7180;
+        }
+
+
+        .kiosk-button {
+            padding: 10px 18px;
+            background-color: #15966c;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+
+        .kiosk-button:hover {
+            background-color: #12805b;
+        }
+
+
+        /* =====================================================
+           DASHBOARD
+        ====================================================== */
+
+        .dashboard {
+            width: 90%;
+            max-width: 1200px;
+            margin: 30px auto;
+        }
+
+
+        /* =====================================================
+           SUMMARY CARDS
+        ====================================================== */
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(
+                3,
+                1fr
+            );
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+
+        .summary-card {
+            background-color: white;
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 6px solid #38bdf8;
+            box-shadow: 0 5px 15px rgba(
+                0,
+                80,
+                120,
+                0.08
+            );
+        }
+
+
+        .summary-card h3 {
+            margin: 0;
+            color: #087ea4;
+        }
+
+
+        .summary-number {
+            font-size: 34px;
+            font-weight: bold;
+            color: #15966c;
+            margin-top: 10px;
+        }
+
+
+        /* =====================================================
+           PATIENT SECTION
+        ====================================================== */
+
+        .patient-section {
+            background-color: white;
+            padding: 30px;
+            border-radius: 18px;
+            box-shadow: 0 5px 18px rgba(
+                0,
+                80,
+                120,
+                0.08
+            );
+        }
+
+
+        .patient-section h2 {
+            color: #087ea4;
+            margin-top: 0;
+        }
+
+
+        /* =====================================================
+           SEARCH
+        ====================================================== */
+
+        .search-box {
+            width: 100%;
+            padding: 14px;
+            font-size: 17px;
+            border: 2px solid #b8e4f2;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+
+        .search-box:focus {
+            outline: none;
+            border-color: #38bdf8;
+        }
+
+
+        /* =====================================================
+           TABLE
+        ====================================================== */
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+
+        th,
+        td {
+            padding: 14px;
+            border-bottom: 1px solid #e2edf2;
+            text-align: center;
+        }
+
+
+        th {
+            background-color: #eef8fb;
+            color: #087ea4;
+            font-weight: bold;
+        }
+
+
+        tr:hover {
+            background-color: #f8fcfd;
+        }
+
+
+        .select-patient-button {
+            padding: 9px 15px;
+            background-color: #087ea4;
+            color: white;
+            border: none;
+            border-radius: 7px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+
+        .select-patient-button:hover {
+            background-color: #056781;
+        }
+
+
+        /* =====================================================
+           PATIENT DETAILS
+        ====================================================== */
+
+        .patient-details {
+            display: none;
+            margin-top: 30px;
+            background-color: #f8fcfd;
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid #d7ebf1;
+        }
+
+
+        .patient-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+
+        .patient-header h2 {
+            margin: 0;
+        }
+
+
+        .patient-info {
+            display: grid;
+            grid-template-columns: repeat(
+                4,
+                1fr
+            );
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+
+        .info-card {
+            background-color: white;
+            padding: 18px;
+            border-radius: 10px;
+            border: 1px solid #e1edf1;
+        }
+
+
+        .info-card span {
+            display: block;
+            color: #71818a;
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+
+        .info-card strong {
+            font-size: 18px;
+            color: #16324f;
+        }
+
+
+        /* =====================================================
+           VITALS
+        ====================================================== */
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(
+                4,
+                1fr
+            );
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+
+        .detail-card {
+            background-color: white;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #e1edf1;
+            text-align: center;
+        }
+
+
+        .detail-card h3 {
+            margin: 0 0 10px 0;
+            color: #087ea4;
+            font-size: 16px;
+        }
+
+
+        .detail-value {
+            font-size: 25px;
+            font-weight: bold;
+            color: #15966c;
+        }
+
+
+        .status-normal {
+            color: #166534;
+        }
+
+
+        .status-attention {
+            color: #92400e;
+        }
+
+
+        .status-abnormal {
+            color: #991b1b;
+        }
+
+
+        /* =====================================================
+           HISTORY
+        ====================================================== */
+
+        .history-wrapper {
+            overflow-x: auto;
+            margin-top: 15px;
+            margin-bottom: 25px;
+        }
+
+
+        .history-table {
+            width: 100%;
+            min-width: 650px;
+            border-collapse: collapse;
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+
+        .history-table th {
+            background-color: #eef8fb;
+        }
+
+
+        /* =====================================================
+           CONSULTATION ACTION
+        ====================================================== */
+
+        .consult-action {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 20px;
+            margin-top: 25px;
+            background-color: #effaf6;
+            border: 1px solid #b8e7d5;
+            border-radius: 12px;
+        }
+
+
+        .consult-action-text {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+
+        .consult-action-text strong {
+            font-size: 18px;
+            color: #087e5b;
+        }
+
+
+        .consult-action-text span {
+            color: #64748b;
+        }
+
+
+        .consult-button {
+            padding: 13px 22px;
+            background-color: #15966c;
+            color: white;
+            border: none;
+            border-radius: 9px;
+            font-weight: bold;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+
+        .consult-button:hover {
+            background-color: #12805b;
+        }
+
+
+        /* =====================================================
+           DOCTOR CONSULTATION
+        ====================================================== */
+
+        #doctorConsultation {
+            display: none;
+            margin-top: 30px;
+            background-color: white;
+            padding: 30px;
+            border-radius: 18px;
+            box-shadow: 0 5px 18px rgba(
+                0,
+                80,
+                120,
+                0.08
+            );
+        }
+
+
+        .doctor-consult-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+
+        .doctor-consult-header h2 {
+            margin: 0;
+            color: #087ea4;
+        }
+
+
+        .doctor-consult-header p {
+            margin: 5px 0 0;
+            color: #71818a;
+        }
+
+
+        .live-status {
+            padding: 8px 14px;
+            border-radius: 20px;
+            background-color: #dcfce7;
+            color: #166534;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+
+        .consult-patient-info {
+            display: flex;
+            gap: 35px;
+            padding: 15px;
+            background-color: #f8fcfd;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+
+        .consult-patient-info div {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+
+        .consult-patient-info span {
+            color: #71818a;
+            font-size: 13px;
+        }
+
+
+        .consult-patient-info strong {
+            color: #16324f;
+        }
+
+
+        /* =====================================================
+           PEER STATUS
+        ====================================================== */
+
+        .peer-status {
+            padding: 14px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            background-color: #f1f5f9;
+            color: #334155;
+            font-weight: bold;
+            text-align: center;
+        }
+
+
+        .peer-status.ready {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+
+        .peer-status.connected {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+
+        .peer-status.error {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+
+        .peer-id-box {
+            background-color: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+
+        .peer-id-box span {
+            display: block;
+            color: #64748b;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+
+
+        .peer-id-box strong {
+            color: #1d4ed8;
+            font-size: 18px;
+            letter-spacing: 0.5px;
+        }
+
+
+        /* =====================================================
+           VIDEO AREA
+        ====================================================== */
+
+        .doctor-video-area {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 18px;
+            margin-top: 20px;
+        }
+
+
+        .main-video,
+        .self-video {
+            position: relative;
+            background-color: #020617;
+            border-radius: 14px;
+            overflow: hidden;
+            min-height: 300px;
+        }
+
+
+        .main-video {
+            min-height: 400px;
+        }
+
+
+        .main-video video,
+        .self-video video {
+            width: 100%;
+            height: 100%;
+            min-height: 300px;
+            object-fit: cover;
+            background-color: #020617;
+        }
+
+
+        .main-video video {
+            min-height: 400px;
+        }
+
+
+        .video-label {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 3;
+            background-color: rgba(
+                0,
+                0,
+                0,
+                0.65
+            );
+            color: white;
+            padding: 7px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+
+        .video-placeholder {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+        }
+
+
+        .video-person {
+            width: 90px;
+            height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: #e8f5f9;
+            color: #087ea4;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+
+        .video-placeholder p {
+            margin: 12px 0 5px;
+            font-weight: bold;
+        }
+
+
+        .video-placeholder span {
+            color: #cbd5e1;
+            font-size: 13px;
+        }
+
+
+        /* =====================================================
+           CONTROLS
+        ====================================================== */
+
+        .doctor-call-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+
+        .doctor-call-button {
+            min-width: 90px;
+            height: 45px;
+            border: 1px solid #c9dce4;
+            border-radius: 8px;
+            background-color: white;
+            color: #16324f;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+
+        .doctor-call-button:hover {
+            background-color: #f1f5f9;
+        }
+
+
+        .doctor-call-button.active {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+
+        .doctor-end-call {
+            height: 45px;
+            padding: 0 25px;
+            border: none;
+            border-radius: 8px;
+            background-color: #c0392b;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+
+        .doctor-end-call:hover {
+            background-color: #a93226;
+        }
+
+
+        .doctor-end-call:disabled,
+        .doctor-call-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+
+        /* =====================================================
+           MESSAGES
+        ====================================================== */
+
+        .message {
+            text-align: center;
+            padding: 25px;
+            color: #71818a;
+        }
+
+
+        .error-message {
+            color: #b42318;
+            background-color: #ffe7e5;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+
+        /* =====================================================
+           FOOTER
+        ====================================================== */
+
+        footer {
+            text-align: center;
+            padding: 25px;
+            color: #64748b;
+        }
+
+
+        /* =====================================================
+           RESPONSIVE
+        ====================================================== */
+
+        @media (
+            max-width: 900px
+        ) {
+
+            .summary-grid,
+            .detail-grid,
+            .patient-info {
+                grid-template-columns:
+                    repeat(2, 1fr);
+            }
+
+
+            .doctor-video-area {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+
+        @media (
+            max-width: 650px
+        ) {
+
+            header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+                padding: 18px;
+            }
+
+
+            .dashboard {
+                width: 95%;
+            }
+
+
+            .summary-grid,
+            .detail-grid,
+            .patient-info {
+                grid-template-columns: 1fr;
+            }
+
+
+            .patient-header,
+            .consult-action {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+
+            .consult-patient-info {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+
+            .doctor-consult-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     HEADER
+===================================================== -->
+
+<header>
+
+    <div class="header-title">
+
+        <div class="hospital-icon">
+            🏥
+        </div>
+
+        <div>
+
+            <h1>
+                Health Screening Dashboard
+            </h1>
+
+            <p>
+                Doctor / Healthcare Worker Portal
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <button
+        type="button"
+        class="kiosk-button"
+        onclick="goToPatientKiosk()"
+    >
+
+        Patient Kiosk
+
+    </button>
+
+</header>
+
+
+
+<!-- =====================================================
+     DASHBOARD
+===================================================== -->
+
+<main class="dashboard">
+
+
+    <!-- =================================================
+         SUMMARY
+    ================================================== -->
+
+    <div class="summary-grid">
+
+
+        <div class="summary-card">
+
+            <h3>
+                Total Patients
+            </h3>
+
+            <div
+                class="summary-number"
+                id="totalPatients"
+            >
+                0
+            </div>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <h3>
+                Normal
+            </h3>
+
+            <div
+                class="summary-number"
+                id="normalPatients"
+            >
+                0
+            </div>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <h3>
+                Attention
+            </h3>
+
+            <div
+                class="summary-number"
+                id="attentionPatients"
+            >
+                0
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- =================================================
+         BACKEND ERROR
+    ================================================== -->
+
+    <div
+        id="backendError"
+        class="error-message"
+    ></div>
+
+
+
+    <!-- =================================================
+         PATIENT LIST
+    ================================================== -->
+
+    <section class="patient-section">
+
+        <h2>
+            👥 Registered Patients
+        </h2>
+
+
+        <input
+            type="text"
+            id="patientSearch"
+            class="search-box"
+            placeholder="Search patient by name, ID or phone..."
+            oninput="filterPatients()"
+        >
+
+
+        <div
+            style="overflow-x:auto;"
+        >
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Patient ID
+                        </th>
+
+                        <th>
+                            Name
+                        </th>
+
+                        <th>
+                            Age
+                        </th>
+
+                        <th>
+                            Gender
+                        </th>
+
+                        <th>
+                            Phone
+                        </th>
+
+                        <th>
+                            Action
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody
+                    id="patientTable"
+                >
+
+                    <tr>
+
+                        <td
+                            colspan="6"
+                            class="message"
+                        >
+
+                            Loading patients...
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+
+        <!-- =================================================
+             PATIENT DETAILS
+        ================================================== -->
+
+        <div
+            id="patientDetails"
+            class="patient-details"
+        >
+
+
+            <div class="patient-header">
+
+                <div>
+
+                    <h2>
+                        👤 Patient Details
+                    </h2>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="select-patient-button"
+                    onclick="closePatientDetails()"
+                >
+
+                    Close
+
+                </button>
+
+            </div>
+
+
+            <!-- PATIENT INFO -->
+
+            <div class="patient-info">
+
+
+                <div class="info-card">
+
+                    <span>
+                        Patient ID
+                    </span>
+
+                    <strong
+                        id="detailPatientId"
+                    >
+                        --
+                    </strong>
+
+                </div>
+
+
+                <div class="info-card">
+
+                    <span>
+                        Name
+                    </span>
+
+                    <strong
+                        id="detailName"
+                    >
+                        --
+                    </strong>
+
+                </div>
+
+
+                <div class="info-card">
+
+                    <span>
+                        Age
+                    </span>
+
+                    <strong
+                        id="detailAge"
+                    >
+                        --
+                    </strong>
+
+                </div>
+
+
+                <div class="info-card">
+
+                    <span>
+                        Gender
+                    </span>
+
+                    <strong
+                        id="detailGender"
+                    >
+                        --
+                    </strong>
+
+                </div>
+
+
+            </div>
+
+
+
+            <div class="patient-info">
+
+
+                <div class="info-card">
+
+                    <span>
+                        Phone
+                    </span>
+
+                    <strong
+                        id="detailPhone"
+                    >
+                        --
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- VITALS -->
+
+            <h2>
+                ❤️ Latest Health Results
+            </h2>
+
+
+            <div class="detail-grid">
+
+
+                <div class="detail-card">
+
+                    <h3>
+                        🌡️ Temperature
+                    </h3>
+
+                    <div
+                        class="detail-value"
+                        id="detailTemperature"
+                    >
+                        --
+                    </div>
+
+                </div>
+
+
+                <div class="detail-card">
+
+                    <h3>
+                        ❤️ Heart Rate
+                    </h3>
+
+                    <div
+                        class="detail-value"
+                        id="detailHeartRate"
+                    >
+                        --
+                    </div>
+
+                </div>
+
+
+                <div class="detail-card">
+
+                    <h3>
+                        🫁 SpO₂
+                    </h3>
+
+                    <div
+                        class="detail-value"
+                        id="detailSpO2"
+                    >
+                        --
+                    </div>
+
+                </div>
+
+
+                <div class="detail-card">
+
+                    <h3>
+                        🩸 Blood Pressure
+                    </h3>
+
+                    <div
+                        class="detail-value"
+                        id="detailBP"
+                    >
+                        --
+                    </div>
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- STATUS -->
+
+            <h2>
+                Overall Status:
+
+                <span
+                    id="detailStatus"
+                    class="status-normal"
+                >
+                    No reading
+                </span>
+
+            </h2>
+
+
+
+            <!-- HISTORY -->
+
+            <h2>
+                Health Reading History
+            </h2>
+
+
+            <div class="history-wrapper">
+
+                <table class="history-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Time
+                            </th>
+
+                            <th>
+                                Temperature
+                            </th>
+
+                            <th>
+                                Heart Rate
+                            </th>
+
+                            <th>
+                                SpO₂
+                            </th>
+
+                            <th>
+                                Blood Pressure
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody
+                        id="historyTable"
+                    >
+
+                        <tr>
+
+                            <td
+                                colspan="5"
+                                class="message"
+                            >
+
+                                Select a patient.
+
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+
+            <!-- CONSULTATION ACTION -->
+
+            <div class="consult-action">
+
+                <div class="consult-action-text">
+
+                    <strong>
+                        Doctor Consultation
+                    </strong>
+
+                    <span>
+                        Start a video consultation with this patient.
+                    </span>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="consult-button"
+                    onclick="showDoctorConsultation()"
+                >
+
+                    📹 Join Consultation
+
+                </button>
+
+            </div>
+
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =================================================
+         DOCTOR VIDEO CONSULTATION
+    ================================================== -->
+
+    <div
+        id="doctorConsultation"
+    >
+
+
+        <div class="doctor-consult-header">
+
+            <div>
+
+                <h2>
+                    Video Consultation
+                </h2>
+
+                <p>
+                    Patient consultation room
+                </p>
+
+            </div>
+
+
+            <span
+                class="live-status"
+                id="consultationLiveStatus"
+            >
+
+                ● WAITING FOR PATIENT
+
+            </span>
+
+        </div>
+
+
+
+        <!-- PATIENT INFORMATION -->
+
+        <div class="consult-patient-info">
+
+            <div>
+
+                <span>
+                    Patient
+                </span>
+
+                <strong
+                    id="consultPatientName"
+                >
+                    Patient
+                </strong>
+
+            </div>
+
+
+            <div>
+
+                <span>
+                    Patient ID
+                </span>
+
+                <strong
+                    id="consultPatientId"
+                >
+                    --
+                </strong>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- PEER STATUS -->
+
+        <div
+            id="doctorPeerStatus"
+            class="peer-status"
+        >
+
+            🟡 Starting doctor video service...
+
+        </div>
+
+
+
+        <!-- FIXED DOCTOR ID -->
+
+        <div
+            class="peer-id-box"
+        >
+
+            <span>
+                Doctor Video Service
+            </span>
+
+            <strong>
+                INNOHACK-DOCTOR
+            </strong>
+
+        </div>
+
+
+
+        <!-- VIDEO AREA -->
+
+        <div class="doctor-video-area">
+
+
+            <!-- PATIENT VIDEO -->
+
+            <div class="main-video">
+
+                <div class="video-label">
+                    👤 Patient
+                </div>
+
+
+                <div
+                    id="patientVideoPlaceholder"
+                    class="video-placeholder"
+                >
+
+                    <div class="video-person">
+                        PATIENT
+                    </div>
+
+                    <p>
+                        Waiting for patient...
+                    </p>
+
+                    <span>
+                        Patient will connect automatically.
+                    </span>
+
+                </div>
+
+
+                <video
+                    id="doctorPatientVideo"
+                    autoplay
+                    playsinline
+                ></video>
+
+            </div>
+
+
+
+            <!-- DOCTOR SELF VIDEO -->
+
+            <div class="self-video">
+
+                <div class="video-label">
+                    👨‍⚕️ You
+                </div>
+
+
+                <div
+                    id="doctorVideoPlaceholder"
+                    class="video-placeholder"
+                >
+
+                    <div class="video-person">
+                        DR
+                    </div>
+
+                    <p>
+                        Your Camera
+                    </p>
+
+                </div>
+
+
+                <video
+                    id="doctorSelfVideo"
+                    autoplay
+                    muted
+                    playsinline
+                ></video>
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- CONTROLS -->
+
+        <div class="doctor-call-controls">
+
+
+            <button
+                id="doctorMicButton"
+                class="doctor-call-button"
+                onclick="toggleMicrophone()"
+            >
+
+                🎤 MIC ON
+
+            </button>
+
+
+            <button
+                id="doctorCameraButton"
+                class="doctor-call-button"
+                onclick="toggleCamera()"
+            >
+
+                📷 CAM ON
+
+            </button>
+
+
+            <button
+                class="doctor-end-call"
+                onclick="endDoctorConsultation()"
+            >
+
+                ☎ END CALL
+
+            </button>
+
+
+        </div>
+
+
+    </div>
+
+
+</main>
+
+
+
+<!-- =====================================================
+     FOOTER
+===================================================== -->
+
+<footer>
+
+    Rural Telemedicine Health Kiosk
+
+    <br>
+
+    IoT-enabled remote healthcare system
+
+</footer>
+
+
+
+<!-- =====================================================
+     JAVASCRIPT
+===================================================== -->
+
+<script>
+
+
+/* =====================================================
+   FLASK
+===================================================== */
+
+const API_BASE_URL =
+    "http://127.0.0.1:5000";
+
+
+
+/* =====================================================
+   FIXED DOCTOR PEER ID
+===================================================== */
+
+/*
+ * IMPORTANT:
+ *
+ * The patient.html uses this exact ID:
+ *
+ *     INNOHACK-DOCTOR
+ *
+ * Therefore DO NOT change this value unless
+ * you also change it in patient.html.
+ */
+
+const DOCTOR_PEER_ID =
+    "INNOHACK-DOCTOR";
+
+
+
+/* =====================================================
+   DATA
+===================================================== */
+
+let patients = [];
+
+let filteredPatients = [];
+
+let selectedPatient = null;
+
+let selectedReadings = [];
+
+
+
+/* =====================================================
+   PEERJS VARIABLES
+===================================================== */
+
+let doctorPeer = null;
+
+let doctorLocalStream = null;
+
+let doctorCurrentCall = null;
+
+let doctorMicEnabled = true;
+
+let doctorCameraEnabled = true;
+
+
+
+/* =====================================================
+   LOAD ALL PATIENTS
+===================================================== */
+
+async function loadPatients() {
+
+    const table =
+        document.getElementById(
+            "patientTable"
+        );
+
+
+    table.innerHTML = `
+
+        <tr>
+
+            <td
+                colspan="6"
+                class="message"
+            >
+
+                Loading patients...
+
+            </td>
+
+        </tr>
+
+    `;
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_BASE_URL}/api/patients`,
+                {
+                    cache:
+                        "no-store"
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        console.log(
+            "Patients response:",
+            data
+        );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                data.error ||
+                `HTTP ${response.status}`
+            );
+
+        }
+
+
+        /*
+         * Support several possible
+         * Flask response formats.
+         */
+
+        if (
+            Array.isArray(
+                data.patients
+            )
+        ) {
+
+            patients =
+                data.patients;
+
+        }
+
+        else if (
+            Array.isArray(
+                data.data
+            )
+        ) {
+
+            patients =
+                data.data;
+
+        }
+
+        else if (
+            Array.isArray(
+                data
+            )
+        ) {
+
+            patients =
+                data;
+
+        }
+
+        else {
+
+            patients = [];
+
+        }
+
+
+        filteredPatients =
+            [...patients];
+
+
+        displayPatients(
+            filteredPatients
+        );
+
+
+        document.getElementById(
+            "totalPatients"
+        ).textContent =
+            patients.length;
+
+
+        calculateSummary(
+            patients
+        );
+
+
+        document.getElementById(
+            "backendError"
+        ).style.display =
+            "none";
+
+    }
+
+
+    catch (error) {
+
+        console.error(
+            "PATIENT LOAD ERROR:",
+            error
+        );
+
+
+        table.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="6"
+                    class="message"
+                >
+
+                    Unable to load patients.
+
+                    <br><br>
+
+                    Make sure Flask is running.
+
+                </td>
+
+            </tr>
+
+        `;
+
+
+        const errorBox =
+            document.getElementById(
+                "backendError"
+            );
+
+
+        errorBox.textContent =
+            "Flask connection error: " +
+            error.message;
+
+
+        errorBox.style.display =
+            "block";
+
+    }
+
+}
+
+
+
+/* =====================================================
+   DISPLAY PATIENTS
+===================================================== */
+
+function displayPatients(
+    patientList
+) {
+
+    const table =
+        document.getElementById(
+            "patientTable"
+        );
+
+
+    table.innerHTML = "";
+
+
+    if (
+        patientList.length === 0
+    ) {
+
+        table.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="6"
+                    class="message"
+                >
+
+                    No patients registered yet.
+
+                </td>
+
+            </tr>
+
+        `;
+
+        return;
+
+    }
+
+
+    patientList.forEach(
+        function(patient) {
+
+            const row =
+                document.createElement(
+                    "tr"
+                );
+
+
+            const patientId =
+                patient.patient_id ??
+                patient.id ??
+                "--";
+
+
+            row.innerHTML = `
+
+                <td>
+                    ${escapeHtml(
+                        patientId
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHtml(
+                        patient.name ??
+                        "--"
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHtml(
+                        patient.age ??
+                        "--"
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHtml(
+                        patient.gender ??
+                        "--"
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHtml(
+                        patient.phone ??
+                        "--"
+                    )}
+                </td>
+
+                <td>
+
+                    <button
+                        type="button"
+                        class="select-patient-button"
+                    >
+
+                        View
+
+                    </button>
+
+                </td>
+
+            `;
+
+
+            const button =
+                row.querySelector(
+                    "button"
+                );
+
+
+            button.addEventListener(
+                "click",
+                function() {
+
+                    selectPatient(
+                        patient
+                    );
+
+                }
+            );
+
+
+            table.appendChild(
+                row
+            );
+
+        }
+    );
+
+}
+
+
+
+/* =====================================================
+   SEARCH PATIENTS
+===================================================== */
+
+function filterPatients() {
+
+    const search =
+        document.getElementById(
+            "patientSearch"
+        ).value
+            .trim()
+            .toLowerCase();
+
+
+    if (!search) {
+
+        filteredPatients =
+            [...patients];
+
+    }
+
+    else {
+
+        filteredPatients =
+            patients.filter(
+                function(patient) {
+
+                    const id =
+                        String(
+                            patient.patient_id ??
+                            patient.id ??
+                            ""
+                        ).toLowerCase();
+
+
+                    const name =
+                        String(
+                            patient.name ??
+                            ""
+                        ).toLowerCase();
+
+
+                    const phone =
+                        String(
+                            patient.phone ??
+                            ""
+                        ).toLowerCase();
+
+
+                    return (
+                        id.includes(search) ||
+                        name.includes(search) ||
+                        phone.includes(search)
+                    );
+
+                }
+            );
+
+    }
+
+
+    displayPatients(
+        filteredPatients
+    );
+
+}
+
+
+
+/* =====================================================
+   SELECT PATIENT
+===================================================== */
+
+async function selectPatient(
+    patient
+) {
+
+    selectedPatient =
+        patient;
+
+
+    const patientId =
+        patient.patient_id ??
+        patient.id;
+
+
+    document.getElementById(
+        "detailPatientId"
+    ).textContent =
+        patientId ?? "--";
+
+
+    document.getElementById(
+        "detailName"
+    ).textContent =
+        patient.name ?? "--";
+
+
+    document.getElementById(
+        "detailAge"
+    ).textContent =
+        patient.age ?? "--";
+
+
+    document.getElementById(
+        "detailGender"
+    ).textContent =
+        patient.gender ?? "--";
+
+
+    document.getElementById(
+        "detailPhone"
+    ).textContent =
+        patient.phone ?? "--";
+
+
+    document.getElementById(
+        "patientDetails"
+    ).style.display =
+        "block";
+
+
+    await loadPatientVitals(
+        patientId
+    );
+
+
+    document.getElementById(
+        "patientDetails"
+    ).scrollIntoView({
+
+        behavior:
+            "smooth"
+
+    });
+
+}
+
+
+
+/* =====================================================
+   LOAD PATIENT VITALS
+===================================================== */
+
+async function loadPatientVitals(
+    patientId
+) {
+
+    if (!patientId) {
+
+        return;
+
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_BASE_URL}/api/vitals/${encodeURIComponent(patientId)}`,
+                {
+                    cache:
+                        "no-store"
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        console.log(
+            "Patient vitals:",
+            data
+        );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                data.error ||
+                `HTTP ${response.status}`
+            );
+
+        }
+
+
+        selectedReadings =
+            Array.isArray(
+                data.readings
+            )
+                ? data.readings
+                : [];
+
+
+        if (
+            selectedReadings.length === 0
+        ) {
+
+            clearPatientVitals();
+
+            return;
+
+        }
+
+
+        const latest =
+            getLatestReading(
+                selectedReadings
+            );
+
+
+        displayPatientVitals(
+            latest
+        );
+
+
+        displayHistory(
+            selectedReadings
+        );
+
+    }
+
+
+    catch (error) {
+
+        console.error(
+            "PATIENT VITALS ERROR:",
+            error
+        );
+
+
+        clearPatientVitals();
+
+    }
+
+}
+
+
+
+/* =====================================================
+   CLEAR PATIENT VITALS
+===================================================== */
+
+function clearPatientVitals() {
+
+    document.getElementById(
+        "detailTemperature"
+    ).textContent =
+        "--";
+
+
+    document.getElementById(
+        "detailHeartRate"
+    ).textContent =
+        "--";
+
+
+    document.getElementById(
+        "detailSpO2"
+    ).textContent =
+        "--";
+
+
+    document.getElementById(
+        "detailBP"
+    ).textContent =
+        "--";
+
+
+    document.getElementById(
+        "detailStatus"
+    ).textContent =
+        "No reading";
+
+
+    document.getElementById(
+        "detailStatus"
+    ).className =
+        "status-normal";
+
+
+    document.getElementById(
+        "historyTable"
+    ).innerHTML = `
+
+        <tr>
+
+            <td
+                colspan="5"
+                class="message"
+            >
+
+                No health readings available.
+
+            </td>
+
+        </tr>
+
+    `;
+
+}
+
+
+
+/* =====================================================
+   GET LATEST READING
+===================================================== */
+
+function getLatestReading(
+    readings
+) {
+
+    if (
+        !readings ||
+        !readings.length
+    ) {
+
+        return null;
+
+    }
+
+
+    const sorted =
+        [...readings].sort(
+            function(a, b) {
+
+                return (
+                    getReadingTime(b) -
+                    getReadingTime(a)
+                );
+
+            }
+        );
+
+
+    return sorted[0];
+
+}
+
+
+
+/* =====================================================
+   READING TIME
+===================================================== */
+
+function getReadingTime(
+    reading
+) {
+
+    const fields = [
+
+        "reading_time",
+
+        "created_at",
+
+        "timestamp",
+
+        "date"
+
+    ];
+
+
+    for (
+        const field of fields
+    ) {
+
+        if (
+            reading[field] != null
+        ) {
+
+            const time =
+                new Date(
+                    reading[field]
+                ).getTime();
+
+
+            if (
+                !Number.isNaN(
+                    time
+                )
+            ) {
+
+                return time;
+
+            }
+
+        }
+
+    }
+
+
+    return 0;
+
+}
+
+
+
+/* =====================================================
+   DISPLAY PATIENT VITALS
+===================================================== */
+
+function displayPatientVitals(
+    reading
+) {
+
+    if (!reading) {
+
+        clearPatientVitals();
+
+        return;
+
+    }
+
+
+    document.getElementById(
+        "detailTemperature"
+    ).textContent =
+
+        reading.temperature != null
+
+            ? `${reading.temperature} °C`
+
+                : "--";
+
+    document.getElementById(
+        "detailHeartRate"
+    ).textContent =
+
+        reading.heart_rate != null
+
+            ? `${Number(
+                reading.heart_rate
+            ).toFixed(2)} BPM`
+
+            : "--";
+
+
+    document.getElementById(
+        "detailSpO2"
+    ).textContent =
+
+        reading.spo2 != null
+
+            ? `${Number(
+                reading.spo2
+            ).toFixed(2)} %`
+
+            : "--";
+
+
+    document.getElementById(
+        "detailBP"
+    ).textContent =
+
+        reading.systolic_bp != null &&
+        reading.diastolic_bp != null
+
+            ? `${Number(
+                reading.systolic_bp
+            ).toFixed(2)} / ${Number(
+                reading.diastolic_bp
+            ).toFixed(2)} mmHg`
+
+            : "--";
+
+
+    const status =
+        calculateVitalStatus(
+            reading
+        );
+
+
+    const statusElement =
+        document.getElementById(
+            "detailStatus"
+        );
+
+
+    statusElement.textContent =
+        status.text;
+
+
+    statusElement.className =
+        status.className;
+
+}
+
+
+
+/* =====================================================
+   DISPLAY HISTORY
+===================================================== */
+
+function displayHistory(
+    readings
+) {
+
+    const table =
+        document.getElementById(
+            "historyTable"
+        );
+
+
+    table.innerHTML = "";
+
+
+    if (
+        !readings ||
+        readings.length === 0
+    ) {
+
+        table.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="5"
+                    class="message"
+                >
+
+                    No health readings available.
+
+                </td>
+
+            </tr>
+
+        `;
+
+        return;
+
+    }
+
+
+    const sorted =
+        [...readings].sort(
+            function(a, b) {
+
+                return (
+                    getReadingTime(b) -
+                    getReadingTime(a)
+                );
+
+            }
+        );
+
+
+    sorted.forEach(
+        function(reading) {
+
+            const row =
+                document.createElement(
+                    "tr"
+                );
+
+
+            const time =
+                reading.reading_time ??
+                reading.created_at ??
+                reading.timestamp ??
+                "--";
+
+
+            const temperature =
+                reading.temperature != null
+
+                    ? `${reading.temperature} °C`
+
+                    : "--";
+
+
+            const heartRate =
+                reading.heart_rate != null
+
+                    ? `${Number(
+                        reading.heart_rate
+                    ).toFixed(2)} BPM`
+
+                    : "--";
+
+
+            const spo2 =
+                reading.spo2 != null
+
+                    ? `${Number(
+                        reading.spo2
+                    ).toFixed(2)} %`
+
+                    : "--";
+
+
+            const bp =
+                reading.systolic_bp != null &&
+                reading.diastolic_bp != null
+
+                    ? `${Number(
+                        reading.systolic_bp
+                    ).toFixed(2)} / ${Number(
+                        reading.diastolic_bp
+                    ).toFixed(2)} mmHg`
+
+                    : "--";
+
+
+            row.innerHTML = `
+
+                <td>
+                    ${escapeHtml(
+                        formatDate(time)
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHtml(
+                        temperature
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHtml(
+                        heartRate
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHtml(
+                        spo2
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHtml(
+                        bp
+                    )}
+                </td>
+
+            `;
+
+
+            table.appendChild(
+                row
+            );
+
+        }
+    );
+
+}
+
+
+
+/* =====================================================
+   CALCULATE VITAL STATUS
+===================================================== */
+
+function calculateVitalStatus(
+    reading
+) {
+
+    let attention =
+        false;
+
+    let abnormal =
+        false;
+
+
+    if (
+        reading &&
+        reading.heart_rate != null
+    ) {
+
+        const hr =
+            Number(
+                reading.heart_rate
+            );
+
+
+        if (
+            hr < 50 ||
+            hr > 120
+        ) {
+
+            abnormal =
+                true;
+
+        }
+
+        else if (
+            hr < 60 ||
+            hr > 100
+        ) {
+
+            attention =
+                true;
+
+        }
+
+    }
+
+
+    if (
+        reading &&
+        reading.spo2 != null
+    ) {
+
+        const spo2 =
+            Number(
+                reading.spo2
+            );
+
+
+        if (
+            spo2 < 90
+        ) {
+
+            abnormal =
+                true;
+
+        }
+
+        else if (
+            spo2 < 95
+        ) {
+
+            attention =
+                true;
+
+        }
+
+    }
+
+
+    if (
+        reading &&
+        reading.systolic_bp != null &&
+        reading.diastolic_bp != null
+    ) {
+
+        const systolic =
+            Number(
+                reading.systolic_bp
+            );
+
+
+        const diastolic =
+            Number(
+                reading.diastolic_bp
+            );
+
+
+        if (
+            systolic >= 180 ||
+            diastolic >= 120 ||
+            systolic < 80 ||
+            diastolic < 50
+        ) {
+
+            abnormal =
+                true;
+
+        }
+
+        else if (
+            systolic >= 140 ||
+            diastolic >= 90
+        ) {
+
+            attention =
+                true;
+
+        }
+
+    }
+
+
+    if (abnormal) {
+
+        return {
+
+            text:
+                "Attention Required",
+
+            className:
+                "status-abnormal"
+
+        };
+
+    }
+
+
+    if (attention) {
+
+        return {
+
+            text:
+                "Review Recommended",
+
+            className:
+                "status-attention"
+
+        };
+
+    }
+
+
+    return {
+
+        text:
+            "Normal",
+
+        className:
+            "status-normal"
+
+    };
+
+}
+
+
+
+/* =====================================================
+   SUMMARY
+===================================================== */
+
+async function calculateSummary(
+    patientList
+) {
+
+    let normal =
+        0;
+
+    let attention =
+        0;
+
+
+    /*
+     * Keep summary responsive without
+     * blocking the dashboard.
+     */
+
+    for (
+        const patient of patientList
+    ) {
+
+        const patientId =
+            patient.patient_id ??
+            patient.id;
+
+
+        if (!patientId) {
+
+            continue;
+
+        }
+
+
+        try {
+
+            const response =
+                await fetch(
+                    `${API_BASE_URL}/api/vitals/${encodeURIComponent(patientId)}`,
+                    {
+                        cache:
+                            "no-store"
+                    }
+                );
+
+
+            if (!response.ok) {
+
+                continue;
+
+            }
+
+
+            const data =
+                await response.json();
+
+
+            const readings =
+                Array.isArray(
+                    data.readings
+                )
+                    ? data.readings
+                    : [];
+
+
+            if (
+                readings.length === 0
+            ) {
+
+                continue;
+
+            }
+
+
+            const latest =
+                getLatestReading(
+                    readings
+                );
+
+
+            const status =
+                calculateVitalStatus(
+                    latest
+                );
+
+
+            if (
+                status.className ===
+                "status-abnormal"
+            ) {
+
+                attention++;
+
+            }
+
+            else if (
+                status.className ===
+                "status-attention"
+            ) {
+
+                attention++;
+
+            }
+
+            else {
+
+                normal++;
+
+            }
+
+        }
+
+        catch (error) {
+
+            console.log(
+                "Summary reading error:",
+                error
+            );
+
+        }
+
+    }
+
+
+    document.getElementById(
+        "normalPatients"
+    ).textContent =
+        normal;
+
+
+    document.getElementById(
+        "attentionPatients"
+    ).textContent =
+        attention;
+
+}
+
+
+
+/* =====================================================
+   SHOW DOCTOR CONSULTATION
+===================================================== */
+
+function showDoctorConsultation() {
+
+    if (!selectedPatient) {
+
+        alert(
+            "Please select a patient first."
+        );
+
+        return;
+
+    }
+
+
+    document.getElementById(
+        "consultPatientName"
+    ).textContent =
+        selectedPatient.name ??
+        "Patient";
+
+
+    document.getElementById(
+        "consultPatientId"
+    ).textContent =
+        selectedPatient.patient_id ??
+        selectedPatient.id ??
+        "--";
+
+
+    document.getElementById(
+        "doctorConsultation"
+    ).style.display =
+        "block";
+
+
+    document.getElementById(
+        "doctorConsultation"
+    ).scrollIntoView({
+
+        behavior:
+            "smooth"
+
+    });
+
+
+    /*
+     * Make sure doctor camera/microphone
+     * are ready.
+     */
+
+    startDoctorMedia();
+
+}
+
+
+
+/* =====================================================
+   CLOSE PATIENT DETAILS
+===================================================== */
+
+function closePatientDetails() {
+
+    document.getElementById(
+        "patientDetails"
+    ).style.display =
+        "none";
+
+}
+
+
+
+/* =====================================================
+   END DOCTOR CONSULTATION
+===================================================== */
+
+function endDoctorConsultation() {
+
+    console.log(
+        "ENDING DOCTOR CONSULTATION"
+    );
+
+
+    if (
+        doctorCurrentCall
+    ) {
+
+        doctorCurrentCall.close();
+
+        doctorCurrentCall =
+            null;
+
+    }
+
+
+    clearPatientVideo();
+
+
+    document.getElementById(
+        "doctorConsultation"
+    ).style.display =
+        "none";
+
+
+    setPeerStatus(
+        "🟢 Doctor video service ready. Waiting for patient...",
+        "ready"
+    );
+
+
+    document.getElementById(
+        "consultationLiveStatus"
+    ).textContent =
+        "● WAITING FOR PATIENT";
+
+}
+
+
+
+/* =====================================================
+   GO TO PATIENT KIOSK
+===================================================== */
+
+function goToPatientKiosk() {
+
+    window.location.href =
+        "./patient.html";
+
+}
+
+
+
+/* =====================================================
+   =====================================================
+   PEERJS VIDEO CONSULTATION
+   =====================================================
+   ===================================================== */
+
+
+
+/* =====================================================
+   UPDATE PEER STATUS
+===================================================== */
+
+function setPeerStatus(
+    message,
+    type = ""
+) {
+
+    const element =
+        document.getElementById(
+            "doctorPeerStatus"
+        );
+
+
+    if (!element) {
+
+        return;
+
+    }
+
+
+    element.textContent =
+        message;
+
+
+    element.className =
+        "peer-status";
+
+
+    if (
+        type === "ready"
+    ) {
+
+        element.classList.add(
+            "ready"
+        );
+
+    }
+
+
+    if (
+        type === "connected"
+    ) {
+
+        element.classList.add(
+            "connected"
+        );
+
+    }
+
+
+    if (
+        type === "error"
+    ) {
+
+        element.classList.add(
+            "error"
+        );
+
+    }
+
+}
+
+
+
+/* =====================================================
+   START DOCTOR MEDIA
+===================================================== */
+
+async function startDoctorMedia() {
+
+    /*
+     * If already available, do not request again.
+     */
+
+    if (
+        doctorLocalStream
+    ) {
+
+        return true;
+
+    }
+
+
+    try {
+
+        setPeerStatus(
+            "🟡 Requesting doctor camera and microphone permission..."
+        );
+
+
+        doctorLocalStream =
+            await navigator.mediaDevices.getUserMedia({
+
+                video:
+                    true,
+
+                audio:
+                    true
+
+            });
+
+
+        /*
+         * Show doctor's own camera.
+         */
+
+        const selfVideo =
+            document.getElementById(
+                "doctorSelfVideo"
+            );
+
+
+        if (selfVideo) {
+
+            selfVideo.srcObject =
+                doctorLocalStream;
+
+            selfVideo.muted =
+                true;
+
+
+            await selfVideo.play()
+                .catch(
+                    function(error) {
+
+                        console.log(
+                            "Doctor self video autoplay:",
+                            error
+                        );
+
+                    }
+                );
+
+        }
+
+
+        document.getElementById(
+            "doctorVideoPlaceholder"
+        ).style.display =
+            "none";
+
+
+        setPeerStatus(
+            "🟢 Camera and microphone ready. Waiting for patient call...",
+            "ready"
+        );
+
+
+        return true;
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "DOCTOR MEDIA ERROR:",
+            error
+        );
+
+
+        setPeerStatus(
+            "❌ Camera/microphone unavailable: " +
+            error.message,
+            "error"
+        );
+
+
+        alert(
+            "Doctor camera or microphone could not be accessed.\n\n" +
+            "Please allow camera and microphone access.\n\n" +
+            error.message
+        );
+
+
+        return false;
+
+    }
+
+}
+
+
+
+/* =====================================================
+   START DOCTOR PEERJS
+===================================================== */
+
+async function startDoctorVideoService() {
+
+    try {
+
+        /*
+         * First get camera and microphone.
+         */
+
+        const mediaReady =
+            await startDoctorMedia();
+
+
+        if (!mediaReady) {
+
+            return;
+
+        }
+
+
+        setPeerStatus(
+            "🟡 Connecting to video service..."
+        );
+
+
+        /*
+         * IMPORTANT:
+         *
+         * The doctor uses a FIXED PeerJS ID.
+         *
+         * Patient.html calls:
+         *
+         *     INNOHACK-DOCTOR
+         */
+
+        doctorPeer =
+            new Peer(
+                DOCTOR_PEER_ID
+            );
+
+
+        /*
+         * Doctor PeerJS opened.
+         */
+
+        doctorPeer.on(
+            "open",
+            function(id) {
+
+                console.log(
+                    "DOCTOR PEER ID:",
+                    id
+                );
+
+
+                setPeerStatus(
+                    "🟢 Doctor video service ready. Waiting for patient calls...",
+                    "ready"
+                );
+
+            }
+        );
+
+
+        /*
+         * =================================================
+         * INCOMING PATIENT CALL
+         * =================================================
+         */
+
+        doctorPeer.on(
+            "call",
+            async function(call) {
+
+                console.log(
+                    "INCOMING PATIENT CALL:",
+                    call.peer
+                );
+
+
+                /*
+                 * Make sure doctor media exists.
+                 */
+
+                if (
+                    !doctorLocalStream
+                ) {
+
+                    const mediaReady =
+                        await startDoctorMedia();
+
+
+                    if (!mediaReady) {
+
+                        call.close();
+
+                        return;
+
+                    }
+
+                }
+
+
+                /*
+                 * Close previous call if necessary.
+                 */
+
+                if (
+                    doctorCurrentCall
+                ) {
+
+                    try {
+
+                        doctorCurrentCall.close();
+
+                    }
+
+                    catch (error) {
+
+                        console.log(
+                            "Previous call close:",
+                            error
+                        );
+
+                    }
+
+                    doctorCurrentCall =
+                        null;
+
+                }
+
+
+                doctorCurrentCall =
+                    call;
+
+
+                setPeerStatus(
+                    "🟡 Patient is calling. Connecting video..."
+                );
+
+
+                document.getElementById(
+                    "consultationLiveStatus"
+                ).textContent =
+                    "● PATIENT CALLING";
+
+
+                /*
+                 * ANSWER THE PATIENT.
+                 *
+                 * This sends doctor's camera
+                 * and microphone to patient.
+                 */
+
+                call.answer(
+                    doctorLocalStream
+                );
+
+
+                /*
+                 * Receive patient's camera
+                 * and microphone.
+                 */
+
+                call.on(
+                    "stream",
+                    async function(
+                        remoteStream
+                    ) {
+
+                        console.log(
+                            "PATIENT VIDEO STREAM RECEIVED"
+                        );
+
+
+                        const patientVideo =
+                            document.getElementById(
+                                "doctorPatientVideo"
+                            );
+
+
+                        if (!patientVideo) {
+
+                            return;
+
+                        }
+
+
+                        patientVideo.srcObject =
+                            remoteStream;
+
+
+                        try {
+
+                            await patientVideo.play();
+
+                        }
+
+                        catch (error) {
+
+                            console.log(
+                                "Patient video play:",
+                                error
+                            );
+
+                        }
+
+
+                        document.getElementById(
+                            "patientVideoPlaceholder"
+                        ).style.display =
+                            "none";
+
+
+                        setPeerStatus(
+                            "🟢 Connected to patient. Video consultation is active.",
+                            "connected"
+                        );
+
+
+                        document.getElementById(
+                            "consultationLiveStatus"
+                        ).textContent =
+                            "● CONSULTATION ACTIVE";
+
+
+                        /*
+                         * Automatically open the
+                         * consultation section.
+                         */
+
+                        document.getElementById(
+                            "doctorConsultation"
+                        ).style.display =
+                            "block";
+
+                    }
+                );
+
+
+                /*
+                 * Call closed.
+                 */
+
+                call.on(
+                    "close",
+                    function() {
+
+                        console.log(
+                            "PATIENT CALL CLOSED"
+                        );
+
+
+                        if (
+                            doctorCurrentCall ===
+                            call
+                        ) {
+
+                            doctorCurrentCall =
+                                null;
+
+                        }
+
+
+                        clearPatientVideo();
+
+
+                        setPeerStatus(
+                            "🟢 Doctor video service ready. Waiting for patient...",
+                            "ready"
+                        );
+
+
+                        document.getElementById(
+                            "consultationLiveStatus"
+                        ).textContent =
+                            "● WAITING FOR PATIENT";
+
+                    }
+                );
+
+
+                /*
+                 * Call error.
+                 */
+
+                call.on(
+                    "error",
+                    function(error) {
+
+                        console.error(
+                            "PATIENT CALL ERROR:",
+                            error
+                        );
+
+
+                        if (
+                            doctorCurrentCall ===
+                            call
+                        ) {
+
+                            doctorCurrentCall =
+                                null;
+
+                        }
+
+
+                        setPeerStatus(
+                            "❌ Video call error: " +
+                            error.message,
+                            "error"
+                        );
+
+
+                        document.getElementById(
+                            "consultationLiveStatus"
+                        ).textContent =
+                            "● CALL ERROR";
+
+                    }
+                );
+
+            }
+        );
+
+
+        /*
+         * PeerJS errors.
+         */
+
+        doctorPeer.on(
+            "error",
+            function(error) {
+
+                console.error(
+                    "DOCTOR PEERJS ERROR:",
+                    error
+                );
+
+
+                /*
+                 * If the fixed ID is already being
+                 * used by another doctor page,
+                 * destroy the old connection/page.
+                 */
+
+                if (
+                    error.type ===
+                    "unavailable-id"
+                ) {
+
+                    setPeerStatus(
+                        "❌ Doctor ID is already in use. Close the other doctor.html window.",
+                        "error"
+                    );
+
+                    return;
+
+                }
+
+
+                setPeerStatus(
+                    "❌ PeerJS error: " +
+                    error.type,
+                    "error"
+                );
+
+            }
+        );
+
+
+        /*
+         * Peer disconnected.
+         */
+
+        doctorPeer.on(
+            "disconnected",
+            function() {
+
+                console.log(
+                    "DOCTOR PEER DISCONNECTED"
+                );
+
+
+                setPeerStatus(
+                    "🟡 Doctor video service disconnected. Reconnecting..."
+                );
+
+
+                /*
+                 * Try to reconnect.
+                 */
+
+                if (
+                    doctorPeer
+                ) {
+
+                    try {
+
+                        doctorPeer.reconnect();
+
+                    }
+
+                    catch (error) {
+
+                        console.error(
+                            "Peer reconnect error:",
+                            error
+                        );
+
+                    }
+
+                }
+
+            }
+        );
+
+
+        /*
+         * Peer destroyed.
+         */
+
+        doctorPeer.on(
+            "close",
+            function() {
+
+                console.log(
+                    "DOCTOR PEER CLOSED"
+                );
+
+
+                setPeerStatus(
+                    "🟡 Doctor video service closed."
+                );
+
+            }
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "DOCTOR VIDEO SERVICE ERROR:",
+            error
+        );
+
+
+        setPeerStatus(
+            "❌ Could not start doctor video service: " +
+            error.message,
+            "error"
+        );
+
+    }
+
+}
+
+
+
+/* =====================================================
+   CLEAR PATIENT VIDEO
+===================================================== */
+
+function clearPatientVideo() {
+
+    const patientVideo =
+        document.getElementById(
+            "doctorPatientVideo"
+        );
+
+
+    if (!patientVideo) {
+
+        return;
+
+    }
+
+
+    /*
+     * Do NOT stop remote tracks here.
+     * Just detach the remote stream.
+     */
+
+    patientVideo.srcObject =
+        null;
+
+
+    document.getElementById(
+        "patientVideoPlaceholder"
+    ).style.display =
+        "flex";
+
+}
+
+
+
+/* =====================================================
+   TOGGLE MICROPHONE
+===================================================== */
+
+function toggleMicrophone() {
+
+    if (
+        !doctorLocalStream
+    ) {
+
+        alert(
+            "Doctor camera and microphone are not ready."
+        );
+
+        return;
+
+    }
+
+
+    const audioTracks =
+        doctorLocalStream.getAudioTracks();
+
+
+    if (
+        audioTracks.length === 0
+    ) {
+
+        alert(
+            "No microphone track was found."
+        );
+
+        return;
+
+    }
+
+
+    doctorMicEnabled =
+        !doctorMicEnabled;
+
+
+    audioTracks.forEach(
+        function(track) {
+
+            track.enabled =
+                doctorMicEnabled;
+
+        }
+    );
+
+
+    const button =
+        document.getElementById(
+            "doctorMicButton"
+        );
+
+
+    if (
+        doctorMicEnabled
+    ) {
+
+        button.textContent =
+            "🎤 MIC ON";
+
+        button.classList.remove(
+            "active"
+        );
+
+    }
+
+    else {
+
+        button.textContent =
+            "🔇 MIC OFF";
+
+        button.classList.add(
+            "active"
+        );
+
+    }
+
+}
+
+
+
+/* =====================================================
+   TOGGLE CAMERA
+===================================================== */
+
+function toggleCamera() {
+
+    if (
+        !doctorLocalStream
+    ) {
+
+        alert(
+            "Doctor camera and microphone are not ready."
+        );
+
+        return;
+
+    }
+
+
+    const videoTracks =
+        doctorLocalStream.getVideoTracks();
+
+
+    if (
+        videoTracks.length === 0
+    ) {
+
+        alert(
+            "No camera track was found."
+        );
+
+        return;
+
+    }
+
+
+    doctorCameraEnabled =
+        !doctorCameraEnabled;
+
+
+    videoTracks.forEach(
+        function(track) {
+
+            track.enabled =
+                doctorCameraEnabled;
+
+        }
+    );
+
+
+    const button =
+        document.getElementById(
+            "doctorCameraButton"
+        );
+
+
+    if (
+        doctorCameraEnabled
+    ) {
+
+        button.textContent =
+            "📷 CAM ON";
+
+        button.classList.remove(
+            "active"
+        );
+
+    }
+
+    else {
+
+        button.textContent =
+            "🚫 CAM OFF";
+
+        button.classList.add(
+            "active"
+        );
+
+    }
+
+}
+
+
+
+/* =====================================================
+   STOP DOCTOR MEDIA
+===================================================== */
+
+function stopDoctorMedia() {
+
+    if (
+        doctorLocalStream
+    ) {
+
+        doctorLocalStream
+            .getTracks()
+            .forEach(
+                function(track) {
+
+                    track.stop();
+
+                }
+            );
+
+
+        doctorLocalStream =
+            null;
+
+    }
+
+
+    const selfVideo =
+        document.getElementById(
+            "doctorSelfVideo"
+        );
+
+
+    if (selfVideo) {
+
+        selfVideo.srcObject =
+            null;
+
+    }
+
+}
+
+
+
+/* =====================================================
+   SECURITY HELPERS
+===================================================== */
+
+function escapeHtml(
+    value
+) {
+
+    return String(
+        value
+    )
+
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+
+        .replace(
+            /</g,
+            "&lt;"
+        )
+
+        .replace(
+            />/g,
+            "&gt;"
+        )
+
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+
+function escapeJs(
+    value
+) {
+
+    return String(
+        value
+    )
+
+        .replace(
+            /\\/g,
+            "\\\\"
+        )
+
+        .replace(
+            /'/g,
+            "\\'"
+        );
+
+}
+
+
+
+/* =====================================================
+   DATE
+===================================================== */
+
+function formatDate(
+    value
+) {
+
+    if (
+        !value ||
+        value === "--"
+    ) {
+
+        return "--";
+
+    }
+
+
+    const date =
+        new Date(
+            value
+        );
+
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+
+        return String(
+            value
+        );
+
+    }
+
+
+    return date.toLocaleString();
+
+}
+
+
+
+/* =====================================================
+   PAGE LOAD
+===================================================== */
+
+loadPatients();
+
+
+/*
+ * Automatically refresh patient list
+ * every 10 seconds.
+ */
+
+setInterval(
+    function() {
+
+        loadPatients();
+
+    },
+    10000
+);
+
+
+/*
+ * Start PeerJS video service.
+ */
+
+window.addEventListener(
+    "load",
+    function() {
+
+        startDoctorVideoService();
+
+    }
+);
+
+
+
+/* =====================================================
+   PAGE CLOSE
+===================================================== */
+
+window.addEventListener(
+    "beforeunload",
+    function() {
+
+        if (
+            doctorCurrentCall
+        ) {
+
+            try {
+
+                doctorCurrentCall.close();
+
+            }
+
+            catch (error) {
+
+                console.log(
+                    "Call close:",
+                    error
+                );
+
+            }
+
+        }
+
+
+        if (
+            doctorPeer
+        ) {
+
+            try {
+
+                doctorPeer.destroy();
+
+            }
+
+            catch (error) {
+
+                console.log(
+                    "Peer destroy:",
+                    error
+                );
+
+            }
+
+        }
+
+
+        stopDoctorMedia();
+
+    }
+);
+
+
+</script>
+
+</body>
+
+</html>

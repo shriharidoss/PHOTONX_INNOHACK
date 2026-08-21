@@ -1,0 +1,3564 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Patient Health Kiosk</title>
+
+    <script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(
+                135deg,
+                #e8f7ff,
+                #f1fff7
+            );
+            color: #16324f;
+        }
+
+        header {
+            background: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 3px 12px rgba(0, 80, 120, 0.10);
+            border-bottom: 4px solid #38bdf8;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .hospital-icon {
+            font-size: 42px;
+        }
+
+        .header-title h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .header-title p {
+            margin: 4px 0 0;
+            color: #64748b;
+        }
+
+        .container {
+            width: 92%;
+            max-width: 1200px;
+            margin: 30px auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 6px 20px rgba(0, 80, 120, 0.10);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            color: #0f766e;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 7px;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 13px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+
+        .register-button {
+            margin-top: 20px;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 10px;
+            background: #0ea5e9;
+            color: white;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .register-button:hover {
+            background: #0284c7;
+        }
+
+        .register-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+        }
+
+        .profile-item {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        .profile-item small {
+            display: block;
+            color: #64748b;
+            margin-bottom: 5px;
+        }
+
+        .profile-item strong {
+            font-size: 18px;
+        }
+
+        .health-button {
+            width: 100%;
+            padding: 20px;
+            border: none;
+            border-radius: 14px;
+            background: #16a34a;
+            color: white;
+            font-size: 21px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(
+                22,
+                163,
+                74,
+                0.25
+            );
+        }
+
+        .health-button:hover {
+            background: #15803d;
+        }
+
+        .health-button:disabled {
+            background: #64748b;
+            cursor: not-allowed;
+        }
+
+        .measurement-section {
+            display: none;
+        }
+
+        .measurement-box {
+            text-align: center;
+            padding: 30px;
+            background: #f0fdfa;
+            border-radius: 16px;
+            border: 2px solid #99f6e4;
+        }
+
+        .sensor-indicator {
+            display: inline-block;
+            padding: 12px 20px;
+            border-radius: 30px;
+            background: #e2e8f0;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+
+        .sensor-indicator.active {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .sensor-indicator.waiting {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .vitals-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+        }
+
+        .vital-card {
+            padding: 22px;
+            border-radius: 16px;
+            background: #f8fafc;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+
+        .vital-icon {
+            font-size: 38px;
+        }
+
+        .vital-name {
+            margin-top: 8px;
+            color: #64748b;
+            font-weight: bold;
+        }
+
+        .vital-value {
+            margin-top: 10px;
+            font-size: 25px;
+            font-weight: bold;
+            color: #0f766e;
+        }
+
+        .status {
+            margin-top: 25px;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .status-normal {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-attention {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-abnormal {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .result-highlight {
+            display: none;
+            margin-bottom: 20px;
+            padding: 16px;
+            border-radius: 12px;
+            background: #dcfce7;
+            color: #166534;
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .history-table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th,
+        td {
+            padding: 13px;
+            border-bottom: 1px solid #e2e8f0;
+            text-align: center;
+        }
+
+        th {
+            background: #f1f5f9;
+            color: #334155;
+        }
+
+        .message {
+            display: none;
+            margin-top: 15px;
+            padding: 13px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .success-message {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .patient-id-display {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .check-result-button {
+            margin-top: 18px;
+            padding: 12px 22px;
+            border: none;
+            border-radius: 10px;
+            background: #6366f1;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .check-result-button:hover {
+            background: #4f46e5;
+        }
+
+        .video-call-card {
+            display: block;
+        }
+
+        .video-status {
+            padding: 14px;
+            border-radius: 10px;
+            background: #f1f5f9;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .video-status.connected {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .video-status.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .video-button {
+            padding: 13px 22px;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+
+        .video-button.call {
+            background: #16a34a;
+        }
+
+        .video-button.call:hover {
+            background: #15803d;
+        }
+
+        .video-button.end {
+            background: #dc2626;
+        }
+
+        .video-button.end:hover {
+            background: #b91c1c;
+        }
+
+        .video-button:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .video-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .video-box {
+            position: relative;
+            background: #0f172a;
+            border-radius: 14px;
+            overflow: hidden;
+            min-height: 250px;
+        }
+
+        .video-box.large {
+            min-height: 350px;
+        }
+
+        .video-box video {
+            width: 100%;
+            height: 100%;
+            min-height: 250px;
+            object-fit: cover;
+            background: #020617;
+        }
+
+        .video-box.large video {
+            min-height: 350px;
+        }
+
+        .video-label {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 2;
+            background: rgba(0,0,0,0.65);
+            color: white;
+            padding: 7px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .call-controls {
+            margin-top: 15px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 25px;
+            color: #64748b;
+        }
+
+        @media (max-width: 900px) {
+
+            .profile-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .vitals-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .video-container {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+        @media (max-width: 650px) {
+
+            header {
+                padding: 18px;
+            }
+
+            .container {
+                width: 95%;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .vitals-grid {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<header>
+
+    <div class="header-title">
+
+        <div class="hospital-icon">
+            🏥
+        </div>
+
+        <div>
+
+            <h1>
+                Rural Health Kiosk
+            </h1>
+
+            <p>
+                Patient Health Check
+            </p>
+
+        </div>
+
+    </div>
+
+</header>
+
+
+<div class="container">
+
+
+    <!-- =====================================================
+         REGISTRATION
+    ====================================================== -->
+
+    <div class="card">
+
+        <h2>
+            👤 Patient Registration
+        </h2>
+
+        <form
+            id="registrationForm"
+            onsubmit="registerPatient(event)"
+        >
+
+            <div class="form-grid">
+
+                <div class="form-group">
+
+                    <label>
+                        Patient Name
+                    </label>
+
+                    <input
+                        type="text"
+                        id="patientName"
+                        required
+                        placeholder="Enter patient name"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Age
+                    </label>
+
+                    <input
+                        type="number"
+                        id="patientAge"
+                        min="1"
+                        max="120"
+                        required
+                        placeholder="Enter age"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Gender
+                    </label>
+
+                    <select
+                        id="patientGender"
+                        required
+                    >
+
+                        <option value="">
+                            Select gender
+                        </option>
+
+                        <option value="Male">
+                            Male
+                        </option>
+
+                        <option value="Female">
+                            Female
+                        </option>
+
+                        <option value="Other">
+                            Other
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Phone
+                    </label>
+
+                    <input
+                        type="tel"
+                        id="patientPhone"
+                        required
+                        placeholder="Enter phone number"
+                    >
+
+                </div>
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="register-button"
+                id="registerButton"
+            >
+                Register Patient
+            </button>
+
+        </form>
+
+
+        <div
+            id="successMessage"
+            class="message success-message"
+        ></div>
+
+
+        <div
+            id="errorMessage"
+            class="message error-message"
+        ></div>
+
+    </div>
+
+
+    <!-- =====================================================
+         PATIENT PROFILE
+    ====================================================== -->
+
+    <div
+        class="card"
+        id="patientProfile"
+        style="display:none;"
+    >
+
+        <h2>
+            👤 Patient Profile
+        </h2>
+
+
+        <div class="profile-grid">
+
+            <div class="profile-item">
+
+                <small>
+                    Patient ID
+                </small>
+
+                <strong id="profilePatientId">
+                    --
+                </strong>
+
+            </div>
+
+
+            <div class="profile-item">
+
+                <small>
+                    Name
+                </small>
+
+                <strong id="profileName">
+                    --
+                </strong>
+
+            </div>
+
+
+            <div class="profile-item">
+
+                <small>
+                    Age
+                </small>
+
+                <strong id="profileAge">
+                    --
+                </strong>
+
+            </div>
+
+
+            <div class="profile-item">
+
+                <small>
+                    Gender
+                </small>
+
+                <strong id="profileGender">
+                    --
+                </strong>
+
+            </div>
+
+
+            <div class="profile-item">
+
+                <small>
+                    Phone
+                </small>
+
+                <strong id="profilePhone">
+                    --
+                </strong>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         HEALTH CHECK
+    ====================================================== -->
+
+    <div class="card">
+
+        <h2>
+            🩺 Health Check
+        </h2>
+
+
+        <div class="patient-id-display">
+
+            Current Patient ID:
+
+            <strong id="currentPatientIdDisplay">
+                --
+            </strong>
+
+        </div>
+
+
+        <button
+            type="button"
+            class="health-button"
+            id="healthCheckButton"
+            onclick="startHealthCheck()"
+        >
+            🩺 START HEALTH CHECK
+        </button>
+
+    </div>
+
+
+    <!-- =====================================================
+         MEASUREMENT
+    ====================================================== -->
+
+    <div
+        class="card measurement-section"
+        id="measurementSection"
+    >
+
+        <h2>
+            📡 Live Health Measurement
+        </h2>
+
+
+        <div class="measurement-box">
+
+            <div>
+
+                Measuring Patient:
+
+                <strong id="measurementPatientId">
+                    --
+                </strong>
+
+            </div>
+
+
+            <div
+                id="sensorIndicator"
+                class="sensor-indicator waiting"
+            >
+                🟡 Waiting for sensor...
+            </div>
+
+
+            <p id="measurementStatus">
+                Starting measurement...
+            </p>
+
+
+            <p>
+                Please place your finger on
+                the MAX30102 sensor and keep
+                your finger still.
+            </p>
+
+
+            <button
+                type="button"
+                class="check-result-button"
+                onclick="manualCheckResult()"
+            >
+                Check Result
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         VITALS
+    ====================================================== -->
+
+    <div
+        class="card"
+        id="vitalsSection"
+        style="display:none;"
+    >
+
+        <h2>
+            ❤️ Your Health Results
+        </h2>
+
+
+        <div
+            id="resultHighlight"
+            class="result-highlight"
+        >
+            ✅ Your health measurement is ready!
+        </div>
+
+
+        <div class="vitals-grid">
+
+
+            <div class="vital-card">
+
+                <div class="vital-icon">
+                    🌡️
+                </div>
+
+                <div class="vital-name">
+                    Temperature
+                </div>
+
+                <div
+                    class="vital-value"
+                    id="temperatureValue"
+                >
+                    -- °C
+                </div>
+
+            </div>
+
+
+            <div class="vital-card">
+
+                <div class="vital-icon">
+                    ❤️
+                </div>
+
+                <div class="vital-name">
+                    Heart Rate
+                </div>
+
+                <div
+                    class="vital-value"
+                    id="heartRateValue"
+                >
+                    -- BPM
+                </div>
+
+            </div>
+
+
+            <div class="vital-card">
+
+                <div class="vital-icon">
+                    🫁
+                </div>
+
+                <div class="vital-name">
+                    SpO₂
+                </div>
+
+                <div
+                    class="vital-value"
+                    id="spo2Value"
+                >
+                    -- %
+                </div>
+
+            </div>
+
+
+            <div class="vital-card">
+
+                <div class="vital-icon">
+                    🩸
+                </div>
+
+                <div class="vital-name">
+                    Blood Pressure
+                </div>
+
+                <div
+                    class="vital-value"
+                    id="bpValue"
+                >
+                    -- / -- mmHg
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div
+            id="vitalsStatus"
+            class="status status-normal"
+        >
+            No reading
+        </div>
+
+
+        <p
+            id="readingTime"
+            style="text-align:center;color:#64748b;"
+        >
+            No reading yet.
+        </p>
+
+    </div>
+
+
+    <!-- =====================================================
+         VIDEO CONSULTATION
+    ====================================================== -->
+
+    <div class="card video-call-card">
+
+        <h2>
+            📹 Video Consultation
+        </h2>
+
+        <p>
+            Connect with a doctor for remote medical consultation.
+        </p>
+
+
+        <div
+            id="patientPeerStatus"
+            class="video-status"
+        >
+            🟡 Starting video service...
+        </div>
+
+
+        <div
+            style="
+                background:#eff6ff;
+                color:#1d4ed8;
+                padding:15px;
+                border-radius:10px;
+                margin-bottom:15px;
+                font-weight:bold;
+                text-align:center;
+            "
+        >
+
+            👨‍⚕️ Doctor:
+            <span>
+                INNOHACK Doctor
+            </span>
+
+            <br>
+
+            <span
+                style="
+                    font-size:13px;
+                    color:#64748b;
+                    font-weight:normal;
+                "
+            >
+                Doctor connection is automatic.
+            </span>
+
+        </div>
+
+
+        <div class="call-controls">
+
+            <button
+                type="button"
+                class="video-button call"
+                id="callDoctorButton"
+                onclick="callDoctor()"
+            >
+                📹 CALL DOCTOR
+            </button>
+
+
+            <button
+                type="button"
+                class="video-button end"
+                id="endCallButton"
+                onclick="endPatientCall()"
+            >
+                ☎ END CALL
+            </button>
+
+        </div>
+
+
+        <div class="video-container">
+
+            <div class="video-box large">
+
+                <div class="video-label">
+                    👨‍⚕️ Doctor
+                </div>
+
+                <video
+                    id="patientDoctorVideo"
+                    autoplay
+                    playsinline
+                ></video>
+
+            </div>
+
+
+            <div class="video-box">
+
+                <div class="video-label">
+                    👤 You
+                </div>
+
+                <video
+                    id="patientSelfVideo"
+                    autoplay
+                    muted
+                    playsinline
+                ></video>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         HISTORY
+    ====================================================== -->
+
+    <div
+        class="card"
+        id="historySection"
+    >
+
+        <h2>
+            📋 Reading History
+        </h2>
+
+
+        <div class="history-table-wrapper">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Date / Time
+                        </th>
+
+                        <th>
+                            Temperature
+                        </th>
+
+                        <th>
+                            Heart Rate
+                        </th>
+
+                        <th>
+                            SpO₂
+                        </th>
+
+                        <th>
+                            Blood Pressure
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="historyTable">
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+</div>
+
+
+<footer>
+
+    Rural Telemedicine Health Kiosk
+
+    <br>
+
+    IoT-enabled remote healthcare system
+
+</footer>
+
+
+<script>
+
+
+/* =====================================================
+   FLASK API
+===================================================== */
+
+const API_BASE_URL =
+    "http://127.0.0.1:5000";
+
+
+/* =====================================================
+   CURRENT PATIENT
+===================================================== */
+
+let currentPatientId =
+    localStorage.getItem("patient_id");
+
+
+/* =====================================================
+   POLLING
+===================================================== */
+
+let pollingTimer = null;
+
+let pollingAttempts = 0;
+
+const MAX_POLLING_ATTEMPTS = 180;
+
+
+/* =====================================================
+   NORMALIZE PATIENT ID
+===================================================== */
+
+function getValidPatientId() {
+
+    const value =
+        Number(currentPatientId);
+
+
+    if (
+        !Number.isInteger(value) ||
+        value <= 0
+    ) {
+
+        return null;
+
+    }
+
+
+    return value;
+
+}
+
+
+/* =====================================================
+   UPDATE PATIENT ID DISPLAY
+===================================================== */
+
+function updatePatientIdDisplay() {
+
+    const element =
+        document.getElementById(
+            "currentPatientIdDisplay"
+        );
+
+
+    if (!element) {
+        return;
+    }
+
+
+    const validId =
+        getValidPatientId();
+
+
+    element.textContent =
+        validId !== null
+            ? validId
+            : "--";
+
+}
+
+
+/* =====================================================
+   REGISTER PATIENT
+===================================================== */
+
+async function registerPatient(event) {
+
+    event.preventDefault();
+
+
+    const name =
+        document.getElementById(
+            "patientName"
+        ).value.trim();
+
+
+    const age =
+        document.getElementById(
+            "patientAge"
+        ).value;
+
+
+    const gender =
+        document.getElementById(
+            "patientGender"
+        ).value;
+
+
+    const phone =
+        document.getElementById(
+            "patientPhone"
+        ).value.trim();
+
+
+    if (
+        !name ||
+        !age ||
+        !gender ||
+        !phone
+    ) {
+
+        showError(
+            "Please fill all required fields."
+        );
+
+        return;
+    }
+
+
+    const button =
+        document.getElementById(
+            "registerButton"
+        );
+
+
+    button.disabled = true;
+
+    button.textContent =
+        "Saving...";
+
+
+    hideMessages();
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_BASE_URL}/api/patients`,
+                {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        name: name,
+
+                        age: Number(age),
+
+                        gender: gender,
+
+                        phone: phone
+
+                    })
+
+                }
+            );
+
+
+        const result =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                result.message ||
+                result.error ||
+                `HTTP ${response.status}`
+            );
+
+        }
+
+
+        const newPatientId =
+            Number(
+                result.patient_id
+            );
+
+
+        if (
+            !Number.isInteger(
+                newPatientId
+            ) ||
+            newPatientId <= 0
+        ) {
+
+            throw new Error(
+                "Flask did not return a valid patient_id."
+            );
+
+        }
+
+
+        /*
+         * IMPORTANT:
+         *
+         * Completely replace the previous patient ID.
+         */
+
+        currentPatientId =
+            newPatientId;
+
+
+        localStorage.setItem(
+            "patient_id",
+            String(newPatientId)
+        );
+
+
+        updatePatientIdDisplay();
+
+
+        displayPatientProfile({
+
+            patient_id:
+                newPatientId,
+
+            name:
+                name,
+
+            age:
+                Number(age),
+
+            gender:
+                gender,
+
+            phone:
+                phone
+
+        });
+
+
+        showSuccess(
+            "Patient registered successfully. Patient ID: " +
+            newPatientId
+        );
+
+
+        document
+            .getElementById(
+                "registrationForm"
+            )
+            .reset();
+
+
+        /*
+         * Clear old result from previous patient.
+         */
+
+        document.getElementById(
+            "vitalsSection"
+        ).style.display = "none";
+
+
+        document.getElementById(
+            "measurementSection"
+        ).style.display = "none";
+
+
+        document.getElementById(
+            "historyTable"
+        ).innerHTML = "";
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "REGISTRATION ERROR:",
+            error
+        );
+
+
+        showError(
+            "Registration failed: " +
+            error.message
+        );
+
+    }
+
+    finally {
+
+        button.disabled = false;
+
+        button.textContent =
+            "Register Patient";
+
+    }
+
+}
+
+
+/* =====================================================
+   DISPLAY PROFILE
+===================================================== */
+
+function displayPatientProfile(patient) {
+
+    document.getElementById(
+        "profilePatientId"
+    ).textContent =
+        patient.patient_id ?? "--";
+
+
+    document.getElementById(
+        "profileName"
+    ).textContent =
+        patient.name ?? "--";
+
+
+    document.getElementById(
+        "profileAge"
+    ).textContent =
+        patient.age ?? "--";
+
+
+    document.getElementById(
+        "profileGender"
+    ).textContent =
+        patient.gender ?? "--";
+
+
+    document.getElementById(
+        "profilePhone"
+    ).textContent =
+        patient.phone ?? "--";
+
+
+    document.getElementById(
+        "patientProfile"
+    ).style.display =
+        "block";
+
+}
+
+
+/* =====================================================
+   START HEALTH CHECK
+===================================================== */
+
+async function startHealthCheck() {
+
+    /*
+     * ALWAYS obtain the ID from the current
+     * registered patient.
+     */
+
+    const patientId =
+        getValidPatientId();
+
+
+    if (patientId === null) {
+
+        alert(
+            "Please register the patient first."
+        );
+
+        return;
+
+    }
+
+
+    /*
+     * Make sure localStorage also contains
+     * the exact current ID.
+     */
+
+    localStorage.setItem(
+        "patient_id",
+        String(patientId)
+    );
+
+
+    currentPatientId =
+        patientId;
+
+
+    updatePatientIdDisplay();
+
+
+    const button =
+        document.getElementById(
+            "healthCheckButton"
+        );
+
+
+    button.disabled = true;
+
+    button.textContent =
+        "HEALTH CHECK RUNNING";
+
+
+    try {
+
+        console.log(
+            "===================================="
+        );
+
+        console.log(
+            "STARTING HEALTH CHECK"
+        );
+
+        console.log(
+            "CURRENT PATIENT ID:",
+            patientId
+        );
+
+        console.log(
+            "===================================="
+        );
+
+
+        /*
+         * THIS IS THE IMPORTANT REQUEST.
+         *
+         * Flask receives the CURRENT patient ID.
+         *
+         * Example:
+         *
+         * Patient 14:
+         * {
+         *     "patient_id": 14
+         * }
+         */
+
+        const response =
+            await fetch(
+                `${API_BASE_URL}/api/measurement-session`,
+                {
+
+                    method: "POST",
+
+                    cache: "no-store",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json",
+
+                        "Cache-Control":
+                            "no-cache"
+
+                    },
+
+                    body: JSON.stringify({
+
+                        patient_id:
+                            patientId
+
+                    })
+
+                }
+            );
+
+
+        const result =
+            await response.json();
+
+
+        console.log(
+            "FLASK MEASUREMENT RESPONSE:",
+            result
+        );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                result.message ||
+                result.error ||
+                `HTTP ${response.status}`
+            );
+
+        }
+
+
+        /*
+         * Verify Flask returned the SAME patient ID.
+         */
+
+        const returnedPatientId =
+            Number(
+                result.patient_id
+            );
+
+
+        if (
+            returnedPatientId !==
+            patientId
+        ) {
+
+            throw new Error(
+                "Patient ID mismatch. " +
+                "Frontend sent Patient " +
+                patientId +
+                " but Flask returned Patient " +
+                returnedPatientId
+            );
+
+        }
+
+
+        /*
+         * Keep the confirmed ID.
+         */
+
+        currentPatientId =
+            returnedPatientId;
+
+
+        localStorage.setItem(
+            "patient_id",
+            String(returnedPatientId)
+        );
+
+
+        updatePatientIdDisplay();
+
+
+        document.getElementById(
+            "measurementSection"
+        ).style.display =
+            "block";
+
+
+        document.getElementById(
+            "measurementPatientId"
+        ).textContent =
+            returnedPatientId;
+
+
+        document.getElementById(
+            "measurementStatus"
+        ).textContent =
+            "Sensor controller started for Patient " +
+            returnedPatientId +
+            ". Place your finger on MAX30102.";
+
+
+        document.getElementById(
+            "sensorIndicator"
+        ).className =
+            "sensor-indicator active";
+
+
+        document.getElementById(
+            "sensorIndicator"
+        ).textContent =
+            "🟢 Sensor active — Patient " +
+            returnedPatientId;
+
+
+        document.getElementById(
+            "vitalsSection"
+        ).style.display =
+            "none";
+
+
+        document.getElementById(
+            "resultHighlight"
+        ).style.display =
+            "none";
+
+
+        document.getElementById(
+            "measurementSection"
+        ).scrollIntoView({
+            behavior: "smooth"
+        });
+
+
+        /*
+         * Start checking the sensor process.
+         */
+
+        startResultPolling();
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "HEALTH CHECK ERROR:",
+            error
+        );
+
+
+        alert(
+            "Unable to start health check.\n\n" +
+            error.message
+        );
+
+
+        button.disabled = false;
+
+        button.textContent =
+            "🩺 START HEALTH CHECK";
+
+    }
+
+}
+
+
+/* =====================================================
+   START RESULT POLLING
+===================================================== */
+
+function startResultPolling() {
+
+    if (pollingTimer) {
+
+        clearInterval(
+            pollingTimer
+        );
+
+    }
+
+
+    pollingAttempts = 0;
+
+
+    checkMeasurementResult();
+
+
+    pollingTimer =
+        setInterval(
+            checkMeasurementResult,
+            2000
+        );
+
+}
+
+
+/* =====================================================
+   CHECK MEASUREMENT STATUS
+===================================================== */
+
+async function checkMeasurementResult() {
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_BASE_URL}/api/measurement-status`,
+                {
+                    cache: "no-store"
+                }
+            );
+
+
+        const status =
+            await response.json();
+
+
+        console.log(
+            "MEASUREMENT STATUS:",
+            status
+        );
+
+
+        pollingAttempts++;
+
+
+        if (
+            status.measurement ===
+            "in_progress"
+        ) {
+
+            document.getElementById(
+                "measurementStatus"
+            ).textContent =
+                "Health measurement in progress for Patient " +
+                getValidPatientId() +
+                "... Keep your finger still.";
+
+
+            document.getElementById(
+                "sensorIndicator"
+            ).className =
+                "sensor-indicator active";
+
+
+            document.getElementById(
+                "sensorIndicator"
+            ).textContent =
+                "🟢 Collecting sensor data...";
+
+
+            if (
+                pollingAttempts >=
+                MAX_POLLING_ATTEMPTS
+            ) {
+
+                stopPolling();
+
+                showMeasurementTimeout();
+
+            }
+
+
+            return;
+
+        }
+
+
+        if (
+            status.measurement ===
+            "complete"
+        ) {
+
+            stopPolling();
+
+            await showCompletedMeasurement();
+
+            return;
+
+        }
+
+
+        if (
+            status.measurement ===
+            "failed"
+        ) {
+
+            stopPolling();
+
+            showMeasurementFailed(
+                status.return_code
+            );
+
+            return;
+
+        }
+
+
+        if (
+            status.measurement ===
+            "not_running"
+        ) {
+
+            document.getElementById(
+                "measurementStatus"
+            ).textContent =
+                "Starting sensor measurement...";
+
+        }
+
+
+        if (
+            pollingAttempts >=
+            MAX_POLLING_ATTEMPTS
+        ) {
+
+            stopPolling();
+
+            showMeasurementTimeout();
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "MEASUREMENT STATUS ERROR:",
+            error
+        );
+
+
+        if (
+            pollingAttempts >=
+            MAX_POLLING_ATTEMPTS
+        ) {
+
+            stopPolling();
+
+            showMeasurementTimeout();
+
+        }
+
+    }
+
+}
+
+
+/* =====================================================
+   MEASUREMENT COMPLETE
+===================================================== */
+
+async function showCompletedMeasurement() {
+
+    document.getElementById(
+        "measurementStatus"
+    ).textContent =
+        "✅ Health measurement completed.";
+
+
+    document.getElementById(
+        "sensorIndicator"
+    ).className =
+        "sensor-indicator active";
+
+
+    document.getElementById(
+        "sensorIndicator"
+    ).textContent =
+        "✅ Sensor measurement complete. Loading result...";
+
+
+    await new Promise(
+        function(resolve) {
+
+            setTimeout(
+                resolve,
+                1000
+            );
+
+        }
+    );
+
+
+    const loaded =
+        await loadMyVitals();
+
+
+    if (!loaded) {
+
+        document.getElementById(
+            "measurementStatus"
+        ).textContent =
+            "Measurement completed, but the result is not available yet. Press Check Result.";
+
+        return;
+
+    }
+
+
+    document.getElementById(
+        "resultHighlight"
+    ).style.display =
+        "block";
+
+
+    document.getElementById(
+        "resultHighlight"
+    ).textContent =
+        "✅ Your health measurement is ready!";
+
+
+    document.getElementById(
+        "vitalsSection"
+    ).scrollIntoView({
+        behavior: "smooth"
+    });
+
+
+    const button =
+        document.getElementById(
+            "healthCheckButton"
+        );
+
+
+    button.disabled = false;
+
+    button.textContent =
+        "🩺 START NEW HEALTH CHECK";
+
+}
+
+
+/* =====================================================
+   MANUAL RESULT
+===================================================== */
+
+async function manualCheckResult() {
+
+    await loadMyVitals();
+
+}
+
+
+/* =====================================================
+   STOP POLLING
+===================================================== */
+
+function stopPolling() {
+
+    if (pollingTimer) {
+
+        clearInterval(
+            pollingTimer
+        );
+
+        pollingTimer = null;
+
+    }
+
+}
+
+
+/* =====================================================
+   MEASUREMENT FAILED
+===================================================== */
+
+function showMeasurementFailed(returnCode) {
+
+    document.getElementById(
+        "measurementStatus"
+    ).textContent =
+        "❌ Sensor measurement failed.";
+
+
+    document.getElementById(
+        "sensorIndicator"
+    ).className =
+        "sensor-indicator waiting";
+
+
+    document.getElementById(
+        "sensorIndicator"
+    ).textContent =
+        "Check ESP32, USB connection and COM port.";
+
+
+    const button =
+        document.getElementById(
+            "healthCheckButton"
+        );
+
+
+    button.disabled = false;
+
+    button.textContent =
+        "🩺 START HEALTH CHECK";
+
+
+    console.error(
+        "Sensor controller return code:",
+        returnCode
+    );
+
+}
+
+
+/* =====================================================
+   TIMEOUT
+===================================================== */
+
+function showMeasurementTimeout() {
+
+    document.getElementById(
+        "measurementStatus"
+    ).textContent =
+        "⚠️ Measurement is taking too long.";
+
+
+    document.getElementById(
+        "sensorIndicator"
+    ).className =
+        "sensor-indicator waiting";
+
+
+    document.getElementById(
+        "sensorIndicator"
+    ).textContent =
+        "Check ESP32 connection and MAX30102.";
+
+
+    const button =
+        document.getElementById(
+            "healthCheckButton"
+        );
+
+
+    button.disabled = false;
+
+    button.textContent =
+        "🩺 START HEALTH CHECK";
+
+}
+
+
+/* =====================================================
+   LOAD VITALS
+===================================================== */
+
+async function loadMyVitals() {
+
+    const patientId =
+        getValidPatientId();
+
+
+    if (patientId === null) {
+
+        return false;
+
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_BASE_URL}/api/vitals/${encodeURIComponent(patientId)}`,
+                {
+                    cache: "no-store"
+                }
+            );
+
+
+        const result =
+            await response.json();
+
+
+        console.log(
+            "PATIENT VITALS:",
+            result
+        );
+
+
+        if (!response.ok) {
+
+            return false;
+
+        }
+
+
+        const readings =
+            Array.isArray(
+                result.readings
+            )
+                ? result.readings
+                : [];
+
+
+        if (
+            readings.length === 0
+        ) {
+
+            return false;
+
+        }
+
+
+        const latest =
+            getLatestReading(
+                readings
+            );
+
+
+        if (!latest) {
+
+            return false;
+
+        }
+
+
+        document.getElementById(
+            "vitalsSection"
+        ).style.display =
+            "block";
+
+
+        displayLatestVitals(
+            latest
+        );
+
+
+        displayHistory(
+            readings
+        );
+
+
+        return true;
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "VITALS ERROR:",
+            error
+        );
+
+        return false;
+
+    }
+
+}
+
+
+/* =====================================================
+   GET LATEST
+===================================================== */
+
+function getLatestReading(readings) {
+
+    if (!readings.length) {
+
+        return null;
+
+    }
+
+
+    const fields = [
+        "reading_time",
+        "created_at",
+        "timestamp",
+        "date"
+    ];
+
+
+    let hasTimestamp = false;
+
+
+    for (
+        const reading of readings
+    ) {
+
+        for (
+            const field of fields
+        ) {
+
+            if (
+                reading[field] != null
+            ) {
+
+                hasTimestamp = true;
+
+                break;
+
+            }
+
+        }
+
+
+        if (hasTimestamp) {
+
+            break;
+
+        }
+
+    }
+
+
+    if (hasTimestamp) {
+
+        return [...readings].sort(
+            function(a, b) {
+
+                return (
+                    getReadingTime(b) -
+                    getReadingTime(a)
+                );
+
+            }
+        )[0];
+
+    }
+
+
+    return readings[
+        readings.length - 1
+    ];
+
+}
+
+
+/* =====================================================
+   READING TIME
+===================================================== */
+
+function getReadingTime(reading) {
+
+    const fields = [
+        "reading_time",
+        "created_at",
+        "timestamp",
+        "date"
+    ];
+
+
+    for (
+        const field of fields
+    ) {
+
+        if (
+            reading[field] != null
+        ) {
+
+            const time =
+                new Date(
+                    reading[field]
+                ).getTime();
+
+
+            if (
+                !Number.isNaN(time)
+            ) {
+
+                return time;
+
+            }
+
+        }
+
+    }
+
+
+    return 0;
+
+}
+
+
+/* =====================================================
+   DISPLAY VITALS
+===================================================== */
+
+function displayLatestVitals(reading) {
+
+    if (!reading) {
+
+        return;
+
+    }
+
+
+    document.getElementById(
+        "temperatureValue"
+    ).textContent =
+
+        reading.temperature != null
+            ? `${reading.temperature} °C`
+            : "-- °C";
+
+
+    document.getElementById(
+        "heartRateValue"
+    ).textContent =
+
+        reading.heart_rate != null
+            ? `${Number(
+                reading.heart_rate
+            ).toFixed(2)} BPM`
+            : "-- BPM";
+
+
+    document.getElementById(
+        "spo2Value"
+    ).textContent =
+
+        reading.spo2 != null
+            ? `${Number(
+                reading.spo2
+            ).toFixed(2)} %`
+            : "-- %";
+
+
+    document.getElementById(
+        "bpValue"
+    ).textContent =
+
+        reading.systolic_bp != null &&
+        reading.diastolic_bp != null
+
+            ? `${Number(
+                reading.systolic_bp
+            ).toFixed(2)} / ${Number(
+                reading.diastolic_bp
+            ).toFixed(2)} mmHg`
+
+            : "-- / -- mmHg";
+
+
+    const time =
+        reading.reading_time ??
+        reading.created_at ??
+        reading.timestamp ??
+        null;
+
+
+    document.getElementById(
+        "readingTime"
+    ).textContent =
+
+        time
+            ? `Latest reading: ${formatDate(time)}`
+            : "Latest reading loaded.";
+
+
+    const status =
+        calculateVitalStatus(
+            reading
+        );
+
+
+    const statusElement =
+        document.getElementById(
+            "vitalsStatus"
+        );
+
+
+    statusElement.textContent =
+        status.text;
+
+
+    statusElement.className =
+        `status ${status.className}`;
+
+}
+
+
+/* =====================================================
+   HISTORY
+===================================================== */
+
+function displayHistory(readings) {
+
+    const table =
+        document.getElementById(
+            "historyTable"
+        );
+
+
+    table.innerHTML = "";
+
+
+    const sorted =
+        [...readings].sort(
+            function(a, b) {
+
+                return (
+                    getReadingTime(b) -
+                    getReadingTime(a)
+                );
+
+            }
+        );
+
+
+    sorted.forEach(
+        function(reading) {
+
+            const row =
+                document.createElement(
+                    "tr"
+                );
+
+
+            const time =
+                reading.reading_time ??
+                reading.created_at ??
+                reading.timestamp ??
+                "--";
+
+
+            const temperature =
+                reading.temperature != null
+                    ? `${reading.temperature} °C`
+                    : "--";
+
+
+            const heartRate =
+                reading.heart_rate != null
+                    ? `${Number(
+                        reading.heart_rate
+                    ).toFixed(2)} BPM`
+                    : "--";
+
+
+            const spo2 =
+                reading.spo2 != null
+                    ? `${Number(
+                        reading.spo2
+                    ).toFixed(2)} %`
+                    : "--";
+
+
+            const bp =
+                reading.systolic_bp != null &&
+                reading.diastolic_bp != null
+
+                    ? `${Number(
+                        reading.systolic_bp
+                    ).toFixed(2)} / ${Number(
+                        reading.diastolic_bp
+                    ).toFixed(2)} mmHg`
+
+                    : "-- / --";
+
+
+            row.innerHTML = `
+
+                <td>
+                    ${escapeHtml(
+                        formatDate(time)
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHtml(
+                        temperature
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHtml(
+                        heartRate
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHtml(
+                        spo2
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHtml(
+                        bp
+                    )}
+                </td>
+
+            `;
+
+
+            table.appendChild(
+                row
+            );
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   VITAL STATUS
+===================================================== */
+
+function calculateVitalStatus(reading) {
+
+    let attention = false;
+
+    let abnormal = false;
+
+
+    if (
+        reading.heart_rate != null
+    ) {
+
+        const hr =
+            Number(
+                reading.heart_rate
+            );
+
+
+        if (
+            hr < 50 ||
+            hr > 120
+        ) {
+
+            abnormal = true;
+
+        }
+
+        else if (
+            hr < 60 ||
+            hr > 100
+        ) {
+
+            attention = true;
+
+        }
+
+    }
+
+
+    if (
+        reading.spo2 != null
+    ) {
+
+        const spo2 =
+            Number(
+                reading.spo2
+            );
+
+
+        if (
+            spo2 < 90
+        ) {
+
+            abnormal = true;
+
+        }
+
+        else if (
+            spo2 < 95
+        ) {
+
+            attention = true;
+
+        }
+
+    }
+
+
+    if (
+        reading.systolic_bp != null &&
+        reading.diastolic_bp != null
+    ) {
+
+        const systolic =
+            Number(
+                reading.systolic_bp
+            );
+
+
+        const diastolic =
+            Number(
+                reading.diastolic_bp
+            );
+
+
+        if (
+            systolic >= 180 ||
+            diastolic >= 120 ||
+            systolic < 80 ||
+            diastolic < 50
+        ) {
+
+            abnormal = true;
+
+        }
+
+        else if (
+            systolic >= 140 ||
+            diastolic >= 90
+        ) {
+
+            attention = true;
+
+        }
+
+    }
+
+
+    /*
+     * Temperature
+     */
+
+    if (
+        reading.temperature != null
+    ) {
+
+        const temperature =
+            Number(
+                reading.temperature
+            );
+
+
+        if (
+            temperature < 35 ||
+            temperature >= 39
+        ) {
+
+            abnormal = true;
+
+        }
+
+        else if (
+            temperature < 36 ||
+            temperature >= 38
+        ) {
+
+            attention = true;
+
+        }
+
+    }
+
+
+    if (abnormal) {
+
+        return {
+            text: "Attention Required",
+            className: "status-abnormal"
+        };
+
+    }
+
+
+    if (attention) {
+
+        return {
+            text: "Review Recommended",
+            className: "status-attention"
+        };
+
+    }
+
+
+    return {
+        text: "Normal",
+        className: "status-normal"
+    };
+
+}
+
+
+/* =====================================================
+   LOAD EXISTING PATIENT
+===================================================== */
+
+async function loadExistingPatient() {
+
+    const patientId =
+        getValidPatientId();
+
+
+    if (patientId === null) {
+
+        updatePatientIdDisplay();
+
+        return;
+
+    }
+
+
+    currentPatientId =
+        patientId;
+
+
+    updatePatientIdDisplay();
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_BASE_URL}/api/patients/${encodeURIComponent(patientId)}`,
+                {
+                    cache: "no-store"
+                }
+            );
+
+
+        if (!response.ok) {
+
+            return;
+
+        }
+
+
+        const result =
+            await response.json();
+
+
+        console.log(
+            "EXISTING PATIENT:",
+            result
+        );
+
+
+        const patient =
+            result.patient ||
+            result.data ||
+            null;
+
+
+        if (!patient) {
+
+            return;
+
+        }
+
+
+        /*
+         * Make absolutely sure the profile
+         * uses the same patient ID.
+         */
+
+        currentPatientId =
+            Number(
+                patient.patient_id
+            );
+
+
+        localStorage.setItem(
+            "patient_id",
+            String(currentPatientId)
+        );
+
+
+        updatePatientIdDisplay();
+
+
+        displayPatientProfile(
+            patient
+        );
+
+
+        await loadMyVitals();
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "LOAD PATIENT ERROR:",
+            error
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   MESSAGES
+===================================================== */
+
+function showSuccess(message) {
+
+    const element =
+        document.getElementById(
+            "successMessage"
+        );
+
+
+    element.textContent =
+        message;
+
+
+    element.style.display =
+        "block";
+
+}
+
+
+function showError(message) {
+
+    const element =
+        document.getElementById(
+            "errorMessage"
+        );
+
+
+    element.textContent =
+        message;
+
+
+    element.style.display =
+        "block";
+
+}
+
+
+function hideMessages() {
+
+    document.getElementById(
+        "successMessage"
+    ).style.display =
+        "none";
+
+
+    document.getElementById(
+        "errorMessage"
+    ).style.display =
+        "none";
+
+}
+
+
+/* =====================================================
+   DATE
+===================================================== */
+
+function formatDate(value) {
+
+    if (
+        !value ||
+        value === "--"
+    ) {
+
+        return "--";
+
+    }
+
+
+    const date =
+        new Date(value);
+
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+
+        return String(value);
+
+    }
+
+
+    return date.toLocaleString();
+
+}
+
+
+/* =====================================================
+   HTML SAFETY
+===================================================== */
+
+function escapeHtml(value) {
+
+    return String(value)
+
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+
+        .replace(
+            /</g,
+            "&lt;"
+        )
+
+        .replace(
+            />/g,
+            "&gt;"
+        )
+
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+
+/* =====================================================
+   PEERJS
+===================================================== */
+
+const DOCTOR_PEER_ID =
+    "INNOHACK-DOCTOR";
+
+
+let patientPeer = null;
+
+let patientLocalStream = null;
+
+let patientCurrentCall = null;
+
+
+/* =====================================================
+   VIDEO STATUS
+===================================================== */
+
+function setVideoStatus(
+    message,
+    type = ""
+) {
+
+    const element =
+        document.getElementById(
+            "patientPeerStatus"
+        );
+
+
+    if (!element) {
+
+        return;
+
+    }
+
+
+    element.textContent =
+        message;
+
+
+    element.className =
+        "video-status";
+
+
+    if (
+        type === "connected"
+    ) {
+
+        element.classList.add(
+            "connected"
+        );
+
+    }
+
+
+    if (
+        type === "error"
+    ) {
+
+        element.classList.add(
+            "error"
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   START VIDEO
+===================================================== */
+
+async function startPatientVideo() {
+
+    try {
+
+        setVideoStatus(
+            "🟡 Requesting camera and microphone permission..."
+        );
+
+
+        patientLocalStream =
+            await navigator.mediaDevices.getUserMedia({
+
+                video: true,
+
+                audio: true
+
+            });
+
+
+        const selfVideo =
+            document.getElementById(
+                "patientSelfVideo"
+            );
+
+
+        if (selfVideo) {
+
+            selfVideo.srcObject =
+                patientLocalStream;
+
+            selfVideo.muted =
+                true;
+
+            await selfVideo.play()
+                .catch(
+                    function(error) {
+
+                        console.log(
+                            "Self video autoplay:",
+                            error
+                        );
+
+                    }
+                );
+
+        }
+
+
+        patientPeer =
+            new Peer();
+
+
+        patientPeer.on(
+            "open",
+            function(id) {
+
+                console.log(
+                    "PATIENT PEER ID:",
+                    id
+                );
+
+
+                setVideoStatus(
+                    "🟢 Video service ready. Doctor connection is automatic."
+                );
+
+            }
+        );
+
+
+        patientPeer.on(
+            "error",
+            function(error) {
+
+                console.error(
+                    "PATIENT PEERJS ERROR:",
+                    error
+                );
+
+
+                setVideoStatus(
+                    "❌ Video service error: " +
+                    error.type,
+                    "error"
+                );
+
+            }
+        );
+
+
+        patientPeer.on(
+            "disconnected",
+            function() {
+
+                setVideoStatus(
+                    "🟡 Video service disconnected."
+                );
+
+            }
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "PATIENT CAMERA ERROR:",
+            error
+        );
+
+
+        setVideoStatus(
+            "❌ Camera/microphone unavailable: " +
+            error.message,
+            "error"
+        );
+
+
+        alert(
+            "Camera or microphone could not be accessed.\n\n" +
+            "Please allow camera and microphone access.\n\n" +
+            error.message
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   CALL DOCTOR
+===================================================== */
+
+async function callDoctor() {
+
+    const doctorId =
+        DOCTOR_PEER_ID;
+
+
+    if (!patientPeer) {
+
+        alert(
+            "Video service is not ready yet."
+        );
+
+        return;
+
+    }
+
+
+    if (!patientLocalStream) {
+
+        alert(
+            "Camera and microphone are not ready."
+        );
+
+        return;
+
+    }
+
+
+    if (patientCurrentCall) {
+
+        patientCurrentCall.close();
+
+        patientCurrentCall =
+            null;
+
+    }
+
+
+    const callButton =
+        document.getElementById(
+            "callDoctorButton"
+        );
+
+
+    callButton.disabled = true;
+
+
+    setVideoStatus(
+        "🟡 Calling doctor..."
+    );
+
+
+    try {
+
+        const call =
+            patientPeer.call(
+                doctorId,
+                patientLocalStream
+            );
+
+
+        patientCurrentCall =
+            call;
+
+
+        call.on(
+            "stream",
+            async function(remoteStream) {
+
+                const doctorVideo =
+                    document.getElementById(
+                        "patientDoctorVideo"
+                    );
+
+
+                if (!doctorVideo) {
+
+                    return;
+
+                }
+
+
+                doctorVideo.srcObject =
+                    remoteStream;
+
+
+                try {
+
+                    await doctorVideo.play();
+
+                }
+
+                catch (error) {
+
+                    console.log(
+                        "Doctor video play:",
+                        error
+                    );
+
+                }
+
+
+                setVideoStatus(
+                    "🟢 Connected to doctor. Video consultation is active.",
+                    "connected"
+                );
+
+            }
+        );
+
+
+        call.on(
+            "close",
+            function() {
+
+                patientCurrentCall =
+                    null;
+
+
+                callButton.disabled =
+                    false;
+
+
+                setVideoStatus(
+                    "🟡 Video call ended."
+                );
+
+
+                clearDoctorVideo();
+
+            }
+        );
+
+
+        call.on(
+            "error",
+            function(error) {
+
+                console.error(
+                    "VIDEO CALL ERROR:",
+                    error
+                );
+
+
+                patientCurrentCall =
+                    null;
+
+
+                callButton.disabled =
+                    false;
+
+
+                setVideoStatus(
+                    "❌ Video call failed: " +
+                    error.message,
+                    "error"
+                );
+
+            }
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "CALL DOCTOR ERROR:",
+            error
+        );
+
+
+        callButton.disabled =
+            false;
+
+
+        setVideoStatus(
+            "❌ Could not call doctor: " +
+            error.message,
+            "error"
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   END CALL
+===================================================== */
+
+function endPatientCall() {
+
+    if (patientCurrentCall) {
+
+        patientCurrentCall.close();
+
+        patientCurrentCall =
+            null;
+
+    }
+
+
+    clearDoctorVideo();
+
+
+    const callButton =
+        document.getElementById(
+            "callDoctorButton"
+        );
+
+
+    if (callButton) {
+
+        callButton.disabled =
+            false;
+
+    }
+
+
+    setVideoStatus(
+        "🟡 Call ended. You can call the doctor again."
+    );
+
+}
+
+
+/* =====================================================
+   CLEAR DOCTOR VIDEO
+===================================================== */
+
+function clearDoctorVideo() {
+
+    const doctorVideo =
+        document.getElementById(
+            "patientDoctorVideo"
+        );
+
+
+    if (!doctorVideo) {
+
+        return;
+
+    }
+
+
+    if (
+        doctorVideo.srcObject
+    ) {
+
+        doctorVideo.srcObject
+            .getTracks()
+            .forEach(
+                function(track) {
+
+                    track.stop();
+
+                }
+            );
+
+    }
+
+
+    doctorVideo.srcObject =
+        null;
+
+}
+
+
+/* =====================================================
+   STOP CAMERA
+===================================================== */
+
+function stopPatientCamera() {
+
+    if (
+        patientLocalStream
+    ) {
+
+        patientLocalStream
+            .getTracks()
+            .forEach(
+                function(track) {
+
+                    track.stop();
+
+                }
+            );
+
+
+        patientLocalStream =
+            null;
+
+    }
+
+}
+
+
+/* =====================================================
+   PAGE LOAD
+===================================================== */
+
+updatePatientIdDisplay();
+
+loadExistingPatient();
+
+
+window.addEventListener(
+    "load",
+    function() {
+
+        startPatientVideo();
+
+    }
+);
+
+
+/* =====================================================
+   PAGE CLOSE
+===================================================== */
+
+window.addEventListener(
+    "beforeunload",
+    function() {
+
+        if (
+            patientCurrentCall
+        ) {
+
+            patientCurrentCall.close();
+
+        }
+
+
+        if (
+            patientPeer
+        ) {
+
+            patientPeer.destroy();
+
+        }
+
+
+        stopPatientCamera();
+
+    }
+);
+
+
+</script>
+
+</body>
+
+</html>

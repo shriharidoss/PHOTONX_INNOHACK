@@ -1,3 +1,4 @@
+```
 <!DOCTYPE html>
 <html lang="en">
 
@@ -1117,7 +1118,7 @@
                     font-weight:normal;
                 "
             >
-                Doctor connection is automatic.
+                Doctor must accept your consultation request before the video call starts.
             </span>
 
         </div>
@@ -3869,18 +3870,32 @@ function sleep(
 
 
 /* ============================================================
-   PEERJS
+   VIDEO CONSULTATION + PEERJS
 ============================================================ */
 
 const DOCTOR_PEER_ID =
     "INNOHACK-DOCTOR";
 
-
 let patientPeer = null;
-
 let patientLocalStream = null;
-
 let patientCurrentCall = null;
+
+/*
+ * Video consultation request state.
+ *
+ * requestId:
+ *   ID returned by Flask when the patient requests a consultation.
+ *
+ * requestStatus:
+ *   pending / accepted / rejected
+ */
+let videoRequestId = null;
+let videoRequestStatus = null;
+let videoRequestPollTimer = null;
+let videoRequestPollAttempts = 0;
+
+const VIDEO_REQUEST_POLL_INTERVAL = 2000;
+const VIDEO_REQUEST_MAX_POLLS = 300;
 
 
 function setVideoStatus(
@@ -3893,19 +3908,15 @@ function setVideoStatus(
             "patientPeerStatus"
         );
 
-
     if (!element) {
         return;
     }
 
-
     element.textContent =
         message;
 
-
     element.className =
         "video-status";
-
 
     if (
         type === "connected"
@@ -3915,7 +3926,6 @@ function setVideoStatus(
             "connected"
         );
     }
-
 
     if (
         type === "error"
@@ -3928,6 +3938,14 @@ function setVideoStatus(
 }
 
 
+/*
+ * Start camera/microphone and PeerJS.
+ *
+ * IMPORTANT:
+ * Starting PeerJS does NOT call the doctor.
+ * The actual doctor call starts only after
+ * the doctor accepts the Flask consultation request.
+ */
 async function startPatientVideo() {
 
     try {
@@ -3936,26 +3954,21 @@ async function startPatientVideo() {
             "🟡 Requesting camera and microphone permission..."
         );
 
-
         patientLocalStream =
             await navigator.mediaDevices.getUserMedia({
                 video: true,
                 audio: true
             });
 
-
         const selfVideo =
             document.getElementById(
                 "patientSelfVideo"
             );
 
-
         selfVideo.srcObject =
             patientLocalStream;
 
-
         selfVideo.muted = true;
-
 
         await selfVideo
             .play()
@@ -3966,14 +3979,11 @@ async function startPatientVideo() {
                         "SELF VIDEO:",
                         error
                     );
-
                 }
             );
 
-
         patientPeer =
             new Peer();
-
 
         patientPeer.on(
             "open",
@@ -3984,13 +3994,58 @@ async function startPatientVideo() {
                     id
                 );
 
-
                 setVideoStatus(
-                    "🟢 Video service ready."
+                    "🟢 Video service ready. Press CALL DOCTOR to send a consultation request."
                 );
             }
         );
 
+        patientPeer.on(
+            "disconnected",
+            function() {
+
+                console.warn(
+                    "PATIENT PEER DISCONNECTED"
+                );
+
+                setVideoStatus(
+                    "🟡 Video service disconnected. Reconnecting..."
+                );
+
+                if (patientPeer) {
+
+                    try {
+                        patientPeer.reconnect();
+                    }
+                    catch (error) {
+                        console.error(
+                            "PEER RECONNECT ERROR:",
+                            error
+                        );
+                    }
+                }
+            }
+        );
+
+        patientPeer.on(
+            "close",
+            function() {
+
+                console.warn(
+                    "PATIENT PEER CLOSED"
+                );
+
+                if (
+                    videoRequestStatus !==
+                    "accepted"
+                ) {
+
+                    setVideoStatus(
+                        "🟡 Video service closed."
+                    );
+                }
+            }
+        );
 
         patientPeer.on(
             "error",
@@ -4001,22 +4056,23 @@ async function startPatientVideo() {
                     error
                 );
 
-
                 setVideoStatus(
                     "❌ Video error: " +
-                    error.type,
+                    (error.type ||
+                     error.message ||
+                     "unknown error"),
                     "error"
                 );
             }
         );
 
-    } catch (error) {
+    }
+    catch (error) {
 
         console.error(
             "CAMERA ERROR:",
             error
         );
-
 
         setVideoStatus(
             "❌ Camera/microphone unavailable: " +
@@ -4027,7 +4083,23 @@ async function startPatientVideo() {
 }
 
 
+/*
+ * Send the consultation request to Flask.
+ *
+ * This is the important change:
+ * CALL DOCTOR no longer immediately starts PeerJS.
+ * It first creates a PENDING consultation request.
+ */
 async function callDoctor() {
+
+    if (!currentPatientId) {
+
+        alert(
+            "Please register the patient first."
+        );
+
+        return;
+    }
 
     if (!patientPeer) {
 
@@ -4038,7 +4110,6 @@ async function callDoctor() {
         return;
     }
 
-
     if (!patientLocalStream) {
 
         alert(
@@ -4048,26 +4119,386 @@ async function callDoctor() {
         return;
     }
 
+    if (
+        videoRequestStatus ===
+        "pending"
+    ) {
 
-    if (patientCurrentCall) {
+        setVideoStatus(
+            "🟡 Consultation request is already waiting for doctor approval."
+        );
 
-        patientCurrentCall.close();
+        return;
     }
 
+    if (
+        patientCurrentCall
+    ) {
+
+        patientCurrentCall.close();
+
+        patientCurrentCall =
+            null;
+    }
 
     const button =
         document.getElementById(
             "callDoctorButton"
         );
 
-
     button.disabled = true;
 
-
     setVideoStatus(
-        "🟡 Calling doctor..."
+        "🟡 Sending consultation request to doctor..."
     );
 
+    try {
+
+        const response =
+            await fetch(
+                `${API_BASE_URL}/api/video-call/request`,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        patient_id:
+                            currentPatientId,
+
+                        reason:
+                            "General video consultation"
+                    })
+                }
+            );
+
+        const data =
+            await response.json();
+
+        console.log(
+            "VIDEO CONSULTATION REQUEST RESPONSE:",
+            data
+        );
+
+        if (
+            !response.ok ||
+            !data.success
+        ) {
+
+            throw new Error(
+                data.message ||
+                `HTTP ${response.status}`
+            );
+        }
+
+        videoRequestId =
+            data.request.id;
+
+        videoRequestStatus =
+            data.request.status;
+
+        videoRequestPollAttempts =
+            0;
+
+        setVideoStatus(
+            "🟡 Request sent. Waiting for doctor to accept..."
+        );
+
+        startVideoRequestPolling();
+
+    }
+    catch (error) {
+
+        console.error(
+            "VIDEO REQUEST ERROR:",
+            error
+        );
+
+        videoRequestId =
+            null;
+
+        videoRequestStatus =
+            null;
+
+        button.disabled =
+            false;
+
+        setVideoStatus(
+            "❌ Could not send consultation request: " +
+            error.message,
+            "error"
+        );
+    }
+}
+
+
+/*
+ * Poll the Flask backend for the patient's request status.
+ *
+ * The patient does NOT call PeerJS until the backend
+ * reports status = accepted.
+ */
+function startVideoRequestPolling() {
+
+    stopVideoRequestPolling();
+
+    videoRequestPollAttempts =
+        0;
+
+    checkVideoRequestStatus();
+
+    videoRequestPollTimer =
+        setInterval(
+            checkVideoRequestStatus,
+            VIDEO_REQUEST_POLL_INTERVAL
+        );
+}
+
+
+function stopVideoRequestPolling() {
+
+    if (
+        videoRequestPollTimer !==
+        null
+    ) {
+
+        clearInterval(
+            videoRequestPollTimer
+        );
+
+        videoRequestPollTimer =
+            null;
+    }
+}
+
+
+async function checkVideoRequestStatus() {
+
+    if (
+        !videoRequestId ||
+        !currentPatientId
+    ) {
+
+        return;
+    }
+
+    videoRequestPollAttempts++;
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_BASE_URL}/api/video-call/patient/${encodeURIComponent(currentPatientId)}`,
+                {
+                    method: "GET",
+                    cache: "no-store"
+                }
+            );
+
+        const data =
+            await response.json();
+
+        if (
+            !response.ok ||
+            !data.success
+        ) {
+
+            throw new Error(
+                data.message ||
+                `HTTP ${response.status}`
+            );
+        }
+
+        const requests =
+            Array.isArray(data.requests)
+                ? data.requests
+                : [];
+
+        const currentRequest =
+            requests.find(
+                function(req) {
+
+                    return String(
+                        req.id
+                    ) === String(
+                        videoRequestId
+                    );
+                }
+            );
+
+        if (!currentRequest) {
+
+            /*
+             * It may have disappeared after server restart.
+             * Keep waiting briefly rather than starting a call.
+             */
+            return;
+        }
+
+        videoRequestStatus =
+            currentRequest.status;
+
+        console.log(
+            "VIDEO REQUEST STATUS:",
+            currentRequest
+        );
+
+        if (
+            currentRequest.status ===
+            "accepted"
+        ) {
+
+            stopVideoRequestPolling();
+
+            setVideoStatus(
+                "🟢 Doctor accepted your request. Connecting video..."
+            );
+
+            const button =
+                document.getElementById(
+                    "callDoctorButton"
+                );
+
+            button.disabled =
+                true;
+
+            await connectToDoctor();
+
+            return;
+        }
+
+        if (
+            currentRequest.status ===
+            "rejected"
+        ) {
+
+            stopVideoRequestPolling();
+
+            videoRequestId =
+                null;
+
+            videoRequestStatus =
+                "rejected";
+
+            const button =
+                document.getElementById(
+                    "callDoctorButton"
+                );
+
+            button.disabled =
+                false;
+
+            setVideoStatus(
+                "❌ Doctor rejected the consultation request.",
+                "error"
+            );
+
+            return;
+        }
+
+        /*
+         * Still pending.
+         */
+        setVideoStatus(
+            "🟡 Waiting for doctor to accept your consultation request..."
+        );
+
+        if (
+            videoRequestPollAttempts >=
+            VIDEO_REQUEST_MAX_POLLS
+        ) {
+
+            stopVideoRequestPolling();
+
+            const button =
+                document.getElementById(
+                    "callDoctorButton"
+                );
+
+            button.disabled =
+                false;
+
+            setVideoStatus(
+                "⚠️ Waiting for doctor approval timed out."
+            );
+        }
+
+    }
+    catch (error) {
+
+        console.error(
+            "VIDEO REQUEST STATUS ERROR:",
+            error
+        );
+
+        /*
+         * Do not immediately mark the call as failed.
+         * Temporary network/API failures can recover.
+         */
+        if (
+            videoRequestPollAttempts >=
+            VIDEO_REQUEST_MAX_POLLS
+        ) {
+
+            stopVideoRequestPolling();
+
+            const button =
+                document.getElementById(
+                    "callDoctorButton"
+                );
+
+            button.disabled =
+                false;
+
+            setVideoStatus(
+                "❌ Could not check doctor approval.",
+                "error"
+            );
+        }
+    }
+}
+
+
+/*
+ * Only called after Flask says the doctor accepted.
+ */
+async function connectToDoctor() {
+
+    if (!patientPeer) {
+
+        setVideoStatus(
+            "❌ Video service is not ready.",
+            "error"
+        );
+
+        return;
+    }
+
+    if (!patientLocalStream) {
+
+        setVideoStatus(
+            "❌ Camera is not ready.",
+            "error"
+        );
+
+        return;
+    }
+
+    if (patientCurrentCall) {
+
+        patientCurrentCall.close();
+
+        patientCurrentCall =
+            null;
+    }
+
+    setVideoStatus(
+        "🟡 Doctor accepted. Starting secure video connection..."
+    );
 
     const call =
         patientPeer.call(
@@ -4075,10 +4506,8 @@ async function callDoctor() {
             patientLocalStream
         );
 
-
     patientCurrentCall =
         call;
-
 
     call.on(
         "stream",
@@ -4089,10 +4518,12 @@ async function callDoctor() {
                     "patientDoctorVideo"
                 );
 
+            if (!video) {
+                return;
+            }
 
             video.srcObject =
                 remoteStream;
-
 
             await video
                 .play()
@@ -4103,10 +4534,8 @@ async function callDoctor() {
                             "DOCTOR VIDEO:",
                             error
                         );
-
                     }
                 );
-
 
             setVideoStatus(
                 "🟢 Connected to doctor.",
@@ -4115,23 +4544,34 @@ async function callDoctor() {
         }
     );
 
-
     call.on(
         "close",
         function() {
 
-            patientCurrentCall = null;
+            patientCurrentCall =
+                null;
 
-            button.disabled = false;
+            const button =
+                document.getElementById(
+                    "callDoctorButton"
+                );
+
+            button.disabled =
+                false;
+
+            clearDoctorVideo();
+
+            videoRequestId =
+                null;
+
+            videoRequestStatus =
+                null;
 
             setVideoStatus(
                 "🟡 Video call ended."
             );
-
-            clearDoctorVideo();
         }
     );
-
 
     call.on(
         "error",
@@ -4142,14 +4582,22 @@ async function callDoctor() {
                 error
             );
 
+            patientCurrentCall =
+                null;
 
-            patientCurrentCall = null;
+            const button =
+                document.getElementById(
+                    "callDoctorButton"
+                );
 
-            button.disabled = false;
-
+            button.disabled =
+                false;
 
             setVideoStatus(
-                "❌ Video call failed.",
+                "❌ Video call failed: " +
+                (error.type ||
+                 error.message ||
+                 "unknown error"),
                 "error"
             );
         }
@@ -4159,21 +4607,28 @@ async function callDoctor() {
 
 function endPatientCall() {
 
+    stopVideoRequestPolling();
+
     if (patientCurrentCall) {
 
         patientCurrentCall.close();
 
-        patientCurrentCall = null;
+        patientCurrentCall =
+            null;
     }
-
 
     clearDoctorVideo();
 
+    videoRequestId =
+        null;
+
+    videoRequestStatus =
+        null;
 
     document.getElementById(
         "callDoctorButton"
-    ).disabled = false;
-
+    ).disabled =
+        false;
 
     setVideoStatus(
         "🟡 Call ended."
@@ -4188,10 +4643,10 @@ function clearDoctorVideo() {
             "patientDoctorVideo"
         );
 
-
     if (video) {
 
-        video.srcObject = null;
+        video.srcObject =
+            null;
     }
 }
 
@@ -4209,8 +4664,8 @@ function stopPatientCamera() {
                 }
             );
 
-
-        patientLocalStream = null;
+        patientLocalStream =
+            null;
     }
 }
 
@@ -4231,13 +4686,14 @@ window.addEventListener(
     function() {
 
         /*
-         * Video starts here.
+         * Video service starts here.
          *
          * SENSOR CONTROLLER DOES NOT START HERE.
+         *
+         * This only prepares the camera and PeerJS.
+         * It does NOT call the doctor automatically.
          */
-
         startPatientVideo();
-
     }
 );
 
@@ -4245,7 +4701,6 @@ window.addEventListener(
 /*
  * Start prescription automatic refresh.
  */
-
 startPrescriptionAutoRefresh();
 
 
@@ -4261,26 +4716,26 @@ window.addEventListener(
 
         stopPrescriptionAutoRefresh();
 
+        stopVideoRequestPolling();
 
         if (patientCurrentCall) {
 
             patientCurrentCall.close();
         }
 
-
         if (patientPeer) {
 
             patientPeer.destroy();
         }
 
-
         stopPatientCamera();
-
     }
 );
+
 
 </script>
 
 </body>
 
 </html>
+```
