@@ -1,24 +1,62 @@
 import mysql.connector
 
+
+# ============================================================
+# DATABASE CONNECTION
+# ============================================================
+
 def get_db_connection():
+
     connection = mysql.connector.connect(
+
         host="localhost",
+
         user="root",
+
         password="hari2008",
+
         database="innohack_kiosk"
+
     )
 
     return connection
-def save_patient(name, age, gender, phone):
+
+
+# ============================================================
+# PATIENT FUNCTIONS
+# ============================================================
+
+def save_patient(
+    name,
+    age,
+    gender,
+    phone
+):
+
     connection = get_db_connection()
     cursor = connection.cursor()
 
     query = """
-        INSERT INTO patients (name, age, gender, phone)
+        INSERT INTO patients
+        (
+            name,
+            age,
+            gender,
+            phone
+        )
         VALUES (%s, %s, %s, %s)
     """
 
-    cursor.execute(query, (name, age, gender, phone))
+    cursor.execute(
+        query,
+        (
+            name,
+            age,
+            gender,
+            phone
+        )
+    )
+
     connection.commit()
 
     patient_id = cursor.lastrowid
@@ -27,9 +65,17 @@ def save_patient(name, age, gender, phone):
     connection.close()
 
     return patient_id
-def get_patient(patient_id):
+
+
+def get_patient(
+    patient_id
+):
+
     connection = get_db_connection()
-    cursor = connection.cursor(dictionary=True)
+
+    cursor = connection.cursor(
+        dictionary=True
+    )
 
     query = """
         SELECT *
@@ -37,13 +83,83 @@ def get_patient(patient_id):
         WHERE patient_id = %s
     """
 
-    cursor.execute(query, (patient_id,))
+    cursor.execute(
+        query,
+        (patient_id,)
+    )
+
     patient = cursor.fetchone()
 
     cursor.close()
     connection.close()
 
     return patient
+
+
+def get_all_patients():
+
+    connection = get_db_connection()
+
+    cursor = connection.cursor(
+        dictionary=True
+    )
+
+    query = """
+        SELECT
+            patient_id,
+            name,
+            age,
+            gender,
+            phone,
+            created_at
+        FROM patients
+        ORDER BY patient_id ASC
+    """
+
+    cursor.execute(query)
+
+    patients = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+
+    return patients
+
+
+def get_patient_by_phone(
+    phone
+):
+
+    connection = get_db_connection()
+
+    cursor = connection.cursor(
+        dictionary=True
+    )
+
+    query = """
+        SELECT *
+        FROM patients
+        WHERE phone = %s
+        LIMIT 1
+    """
+
+    cursor.execute(
+        query,
+        (phone,)
+    )
+
+    patient = cursor.fetchone()
+
+    cursor.close()
+    connection.close()
+
+    return patient
+
+
+# ============================================================
+# HEALTH READING FUNCTIONS
+# ============================================================
+
 def save_health_reading(
     patient_id,
     temperature,
@@ -52,6 +168,7 @@ def save_health_reading(
     systolic_bp,
     diastolic_bp
 ):
+
     connection = get_db_connection()
     cursor = connection.cursor()
 
@@ -88,9 +205,17 @@ def save_health_reading(
     connection.close()
 
     return reading_id
-def get_health_readings(patient_id):
+
+
+def get_health_readings(
+    patient_id
+):
+
     connection = get_db_connection()
-    cursor = connection.cursor(dictionary=True)
+
+    cursor = connection.cursor(
+        dictionary=True
+    )
 
     query = """
         SELECT *
@@ -99,26 +224,52 @@ def get_health_readings(patient_id):
         ORDER BY reading_time DESC
     """
 
-    cursor.execute(query, (patient_id,))
+    cursor.execute(
+        query,
+        (patient_id,)
+    )
+
     readings = cursor.fetchall()
 
     cursor.close()
     connection.close()
 
     return readings
-def save_doctor(name, specialization, phone, email):
+
+
+# ============================================================
+# DOCTOR FUNCTIONS
+# ============================================================
+
+def save_doctor(
+    name,
+    specialization,
+    phone,
+    email
+):
+
     connection = get_db_connection()
     cursor = connection.cursor()
 
     query = """
         INSERT INTO doctors
-        (name, specialization, phone, email)
+        (
+            name,
+            specialization,
+            phone,
+            email
+        )
         VALUES (%s, %s, %s, %s)
     """
 
     cursor.execute(
         query,
-        (name, specialization, phone, email)
+        (
+            name,
+            specialization,
+            phone,
+            email
+        )
     )
 
     connection.commit()
@@ -129,12 +280,19 @@ def save_doctor(name, specialization, phone, email):
     connection.close()
 
     return doctor_id
+
+
+# ============================================================
+# CONSULTATION FUNCTIONS
+# ============================================================
+
 def save_consultation(
     patient_id,
     doctor_id,
     consultation_type,
     diagnosis
 ):
+
     connection = get_db_connection()
     cursor = connection.cursor()
 
@@ -167,6 +325,12 @@ def save_consultation(
     connection.close()
 
     return consultation_id
+
+
+# ============================================================
+# PRESCRIPTION FUNCTIONS
+# ============================================================
+
 def save_prescription(
     patient_id,
     doctor_id,
@@ -176,6 +340,7 @@ def save_prescription(
     duration,
     instructions
 ):
+
     connection = get_db_connection()
     cursor = connection.cursor()
 
@@ -214,13 +379,23 @@ def save_prescription(
     connection.close()
 
     return prescription_id
-def get_prescriptions(patient_id):
+
+
+def get_prescriptions(
+    patient_id
+):
+
     connection = get_db_connection()
-    cursor = connection.cursor(dictionary=True)
+
+    cursor = connection.cursor(
+        dictionary=True
+    )
 
     query = """
         SELECT
             p.prescription_id,
+            p.patient_id,
+            p.doctor_id,
             p.medicine,
             p.dosage,
             p.frequency,
@@ -229,30 +404,55 @@ def get_prescriptions(patient_id):
             p.prescribed_at,
             d.name AS doctor_name
         FROM prescriptions p
-        JOIN doctors d
+        LEFT JOIN doctors d
             ON p.doctor_id = d.doctor_id
         WHERE p.patient_id = %s
         ORDER BY p.prescribed_at DESC
     """
 
-    cursor.execute(query, (patient_id,))
+    cursor.execute(
+        query,
+        (patient_id,)
+    )
+
     prescriptions = cursor.fetchall()
 
     cursor.close()
     connection.close()
 
     return prescriptions
-def create_video_request(patient_id, reason="General consultation"):
+
+
+# ============================================================
+# VIDEO CONSULTATION FUNCTIONS
+# ============================================================
+
+def create_video_request(
+    patient_id,
+    reason="General consultation"
+):
+
     connection = get_db_connection()
     cursor = connection.cursor()
 
     query = """
         INSERT INTO video_consultation_requests
-        (patient_id, reason, status)
+        (
+            patient_id,
+            reason,
+            status
+        )
         VALUES (%s, %s, 'pending')
     """
 
-    cursor.execute(query, (patient_id, reason))
+    cursor.execute(
+        query,
+        (
+            patient_id,
+            reason
+        )
+    )
+
     connection.commit()
 
     request_id = cursor.lastrowid
@@ -261,7 +461,14 @@ def create_video_request(patient_id, reason="General consultation"):
     connection.close()
 
     return request_id
-def accept_video_request(request_id, doctor_id, room_id):
+
+
+def accept_video_request(
+    request_id,
+    doctor_id,
+    room_id
+):
+
     connection = get_db_connection()
     cursor = connection.cursor()
 
@@ -276,7 +483,15 @@ def accept_video_request(request_id, doctor_id, room_id):
           AND status = 'pending'
     """
 
-    cursor.execute(query, (doctor_id, room_id, request_id))
+    cursor.execute(
+        query,
+        (
+            doctor_id,
+            room_id,
+            request_id
+        )
+    )
+
     connection.commit()
 
     updated = cursor.rowcount
@@ -285,7 +500,12 @@ def accept_video_request(request_id, doctor_id, room_id):
     connection.close()
 
     return updated
-def reject_video_request(request_id):
+
+
+def reject_video_request(
+    request_id
+):
+
     connection = get_db_connection()
     cursor = connection.cursor()
 
@@ -296,7 +516,11 @@ def reject_video_request(request_id):
           AND status = 'pending'
     """
 
-    cursor.execute(query, (request_id,))
+    cursor.execute(
+        query,
+        (request_id,)
+    )
+
     connection.commit()
 
     updated = cursor.rowcount
@@ -305,9 +529,17 @@ def reject_video_request(request_id):
     connection.close()
 
     return updated
-def get_patient_video_requests(patient_id):
+
+
+def get_patient_video_requests(
+    patient_id
+):
+
     connection = get_db_connection()
-    cursor = connection.cursor(dictionary=True)
+
+    cursor = connection.cursor(
+        dictionary=True
+    )
 
     query = """
         SELECT *
@@ -316,52 +548,14 @@ def get_patient_video_requests(patient_id):
         ORDER BY created_at DESC
     """
 
-    cursor.execute(query, (patient_id,))
+    cursor.execute(
+        query,
+        (patient_id,)
+    )
+
     requests = cursor.fetchall()
 
     cursor.close()
     connection.close()
 
     return requests
-def get_all_patients():
-    connection = get_db_connection()
-    cursor = connection.cursor(dictionary=True)
-
-    query = """
-        SELECT
-            patient_id,
-            name,
-            age,
-            gender,
-            phone,
-            created_at
-        FROM patients
-        ORDER BY patient_id ASC
-    """
-
-    cursor.execute(query)
-
-    patients = cursor.fetchall()
-
-    cursor.close()
-    connection.close()
-
-    return patients
-def get_patient_by_phone(phone):
-    connection = get_db_connection()
-    cursor = connection.cursor(dictionary=True)
-
-    query = """
-        SELECT *
-        FROM patients
-        WHERE phone = %s
-        LIMIT 1
-    """
-
-    cursor.execute(query, (phone,))
-    patient = cursor.fetchone()
-
-    cursor.close()
-    connection.close()
-
-    return patient

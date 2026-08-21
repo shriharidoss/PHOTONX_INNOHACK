@@ -1,12 +1,22 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
 
+# ============================================================
+# EXISTING ROUTES
+# ============================================================
+
 from routes.health_routes import health_bp
 from routes.vitals_routes import vitals_bp
 from routes.patient_routes import patient_bp
 from routes.report_routes import report_bp
 from routes.video_call_routes import video_call_bp
 from routes.measurement_routes import measurement_bp
+
+# ============================================================
+# PRESCRIPTION ROUTE
+# ============================================================
+
+from routes.prescription_routes import prescription_bp
 
 
 # ============================================================
@@ -59,6 +69,15 @@ app.register_blueprint(
 
 app.register_blueprint(
     measurement_bp
+)
+
+
+# ============================================================
+# PRESCRIPTION ROUTES
+# ============================================================
+
+app.register_blueprint(
+    prescription_bp
 )
 
 

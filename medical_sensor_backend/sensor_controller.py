@@ -3,24 +3,102 @@ import sys
 import json
 import time
 import subprocess
-
-import serial
+import urllib.request
+import urllib.error
 
 
 # ============================================================
-# CONFIGURATION
+# MEDICAL SENSOR CONTROLLER - WIFI VERSION
+# ============================================================
+#
+# COMPLETE FLOW
+#
+# Patient HTML
+#       |
+#       v
+# Flask /api/measurement-session
+#       |
+#       v
+# sensor_controller.py <patient_id>
+#       |
+#       v
+# ESP32 over Wi-Fi
+#       |
+#       +---- /start
+#       |
+#       +---- /status
+#       |
+#       +---- /data
+#       |
+#       v
+# PPG + TEMPERATURE
+#       |
+#       v
+# ppg_recording.csv
+# temperature.json
+#       |
+#       v
+# analyze_vitals.py
+#       |
+#       v
+# vitals_result.json
+#       |
+#       v
+# send_to_backend.py
+#       |
+#       v
+# Flask / MySQL
+#
 # ============================================================
 
-SERIAL_PORT = "COM15"
 
-BAUD_RATE = 115200
+# ============================================================
+# WIFI CONFIGURATION
+# ============================================================
 
-# ESP32 measurement is 10 seconds
+ESP32_IP = "10.34.20.179"
+
+ESP32_BASE_URL = (
+    f"http://{ESP32_IP}"
+)
+
+
+# ============================================================
+# MEASUREMENT SETTINGS
+# ============================================================
+
+# ESP32 performs a 10-second measurement.
 MEASUREMENT_TIME = 10
 
 
+# Maximum time Python will wait for ESP32 completion.
+#
+# This is an emergency safety timeout, NOT the measurement
+# duration.
+#
+# Normal measurement should complete in approximately:
+#
+# 10 seconds
+#
 # ============================================================
-# PROJECT PATH
+
+MEASUREMENT_SAFETY_TIMEOUT = 45
+
+
+# How often to check ESP32 status.
+STATUS_POLL_INTERVAL = 0.5
+
+
+# HTTP timeout.
+HTTP_TIMEOUT = 10
+
+
+# Minimum PPG samples required by processing pipeline.
+MINIMUM_PPG_SAMPLES = 210
+
+
+# ============================================================
+# PROJECT DIRECTORY
 # ============================================================
 
 PROJECT_DIR = os.path.dirname(
@@ -29,44 +107,7 @@ PROJECT_DIR = os.path.dirname(
 
 
 # ============================================================
-# FLASK BACKEND PATH
-# ============================================================
-#
-# IMPORTANT:
-# patient_session.json is created by the Flask backend,
-# NOT inside medical_sensor_backend.
-#
-# Your structure is:
-#
-# PycharmProjects/
-# └── health_kiosk_backend/
-#     └── data/
-#         └── patient_session.json
-#
-# AND:
-#
-# OneDrive/Desktop/kiosk innohack/
-# └── medical_sensor_backend/
-#     └── sensor_controller.py
-#
-# ============================================================
-
-FLASK_BACKEND_DIR = os.path.join(
-    os.path.expanduser("~"),
-    "PycharmProjects",
-    "health_kiosk_backend"
-)
-
-
-SESSION_FILE = os.path.join(
-    FLASK_BACKEND_DIR,
-    "data",
-    "patient_session.json"
-)
-
-
-# ============================================================
-# MEDICAL SENSOR BACKEND PATHS
+# DATA DIRECTORIES
 # ============================================================
 
 DATA_DIR = os.path.join(
@@ -74,16 +115,42 @@ DATA_DIR = os.path.join(
     "data"
 )
 
-
 RAW_DIR = os.path.join(
     DATA_DIR,
     "raw"
 )
 
 
+os.makedirs(
+    DATA_DIR,
+    exist_ok=True
+)
+
+os.makedirs(
+    RAW_DIR,
+    exist_ok=True
+)
+
+
+# ============================================================
+# FILE PATHS
+# ============================================================
+
+SESSION_FILE = os.path.join(
+    DATA_DIR,
+    "patient_session.json"
+)
+
+
 PPG_FILE = os.path.join(
     RAW_DIR,
     "ppg_recording.csv"
+)
+
+
+TEMPERATURE_FILE = os.path.join(
+    DATA_DIR,
+    "temperature.json"
 )
 
 
@@ -107,120 +174,316 @@ SEND_SCRIPT = os.path.join(
 
 
 # ============================================================
-# CREATE DIRECTORIES
+# LOG FUNCTION
 # ============================================================
 
-os.makedirs(
-    DATA_DIR,
-    exist_ok=True
-)
+def log(*messages):
+
+    try:
+
+        print(
+            *messages,
+            flush=True
+        )
+
+    except Exception:
+
+        pass
 
 
-os.makedirs(
-    RAW_DIR,
-    exist_ok=True
-)
+# ============================================================
+# HTTP GET HELPER
+# ============================================================
+
+def esp32_get(
+    endpoint,
+    timeout=HTTP_TIMEOUT
+):
+
+    url = (
+        ESP32_BASE_URL
+        + endpoint
+    )
+
+
+    request = urllib.request.Request(
+        url=url,
+        method="GET"
+    )
+
+
+    try:
+
+        with urllib.request.urlopen(
+            request,
+            timeout=timeout
+        ) as response:
+
+            raw_data = response.read()
+
+
+        text = raw_data.decode(
+            "utf-8",
+            errors="ignore"
+        )
+
+
+        return text
+
+
+    except urllib.error.HTTPError as error:
+
+        raise RuntimeError(
+            f"ESP32 HTTP error {error.code}: {error.reason}"
+        )
+
+
+    except urllib.error.URLError as error:
+
+        raise RuntimeError(
+            f"Could not connect to ESP32: {error.reason}"
+        )
+
+
+    except TimeoutError:
+
+        raise RuntimeError(
+            "ESP32 request timed out."
+        )
+
+
+    except Exception as error:
+
+        raise RuntimeError(
+            f"ESP32 request failed: {error}"
+        )
+
+
+# ============================================================
+# ESP32 JSON GET HELPER
+# ============================================================
+
+def esp32_get_json(
+    endpoint,
+    timeout=HTTP_TIMEOUT
+):
+
+    response_text = esp32_get(
+        endpoint,
+        timeout
+    )
+
+
+    try:
+
+        return json.loads(
+            response_text
+        )
+
+
+    except json.JSONDecodeError as error:
+
+        raise RuntimeError(
+            "ESP32 returned invalid JSON.\n"
+            f"Endpoint: {endpoint}\n"
+            f"Response: {response_text[:500]}\n"
+            f"Error: {error}"
+        )
 
 
 # ============================================================
 # HEADER
 # ============================================================
 
-print()
+log()
 
-print(
-    "================================"
+log(
+    "=============================================="
 )
 
-print(
-    " MEDICAL SENSOR CONTROLLER"
+log(
+    "       MEDICAL SENSOR CONTROLLER"
 )
 
-print(
-    "================================"
+log(
+    "              WIFI VERSION"
 )
 
-print()
+log(
+    "=============================================="
+)
+
+log()
+
+log(
+    "Project directory:"
+)
+
+log(
+    PROJECT_DIR
+)
+
+log()
+
+log(
+    "ESP32 Wi-Fi address:"
+)
+
+log(
+    ESP32_IP
+)
+
+log()
 
 
 # ============================================================
-# CHECK SESSION FILE
+# GET PATIENT ID
+# ============================================================
+#
+# Priority:
+#
+# 1. Patient ID passed directly by Flask
+# 2. patient_session.json
+#
 # ============================================================
 
-if not os.path.exists(
-    SESSION_FILE
-):
-
-    print(
-        "ERROR: patient_session.json not found."
-    )
-
-    print()
-
-    print(
-        "Expected location:"
-    )
-
-    print(
-        SESSION_FILE
-    )
-
-    print()
-
-    print(
-        "Start the health check from the patient"
-    )
-
-    print(
-        "frontend first."
-    )
-
-    sys.exit(1)
+patient_id = None
 
 
 # ============================================================
-# LOAD CURRENT PATIENT SESSION
+# READ COMMAND-LINE PATIENT ID
 # ============================================================
 
-try:
+if len(sys.argv) >= 2:
 
-    with open(
-        SESSION_FILE,
-        "r",
-        encoding="utf-8"
-    ) as file:
+    command_line_patient_id = (
+        sys.argv[1]
+    )
 
-        session = json.load(
-            file
+
+    try:
+
+        patient_id = int(
+            command_line_patient_id
         )
 
-except Exception as error:
 
-    print(
-        "ERROR: Could not read patient_session.json"
-    )
+    except (
+        ValueError,
+        TypeError
+    ):
 
-    print(
-        str(error)
-    )
+        log()
 
-    sys.exit(1)
+        log(
+            "ERROR: Invalid patient ID passed by Flask:"
+        )
+
+        log(
+            command_line_patient_id
+        )
+
+        log()
+
+        sys.exit(1)
 
 
 # ============================================================
-# GET CURRENT PATIENT ID
+# FALLBACK TO PATIENT SESSION
 # ============================================================
-
-patient_id = session.get(
-    "patient_id"
-)
-
 
 if patient_id is None:
 
-    print(
-        "ERROR: patient_id missing from patient_session.json"
+    if not os.path.exists(
+        SESSION_FILE
+    ):
+
+        log()
+
+        log(
+            "ERROR: patient_session.json not found."
+        )
+
+        log()
+
+        log(
+            "Expected:"
+        )
+
+        log(
+            SESSION_FILE
+        )
+
+        log()
+
+        log(
+            "Start the Health Check from the patient page."
+        )
+
+        log()
+
+        sys.exit(1)
+
+
+    log(
+        "Using patient session:"
     )
+
+    log(
+        SESSION_FILE
+    )
+
+    log()
+
+
+    try:
+
+        with open(
+            SESSION_FILE,
+            "r",
+            encoding="utf-8"
+        ) as file:
+
+            session = json.load(
+                file
+            )
+
+
+    except Exception as error:
+
+        log()
+
+        log(
+            "ERROR: Could not read patient_session.json"
+        )
+
+        log(
+            str(error)
+        )
+
+        log()
+
+        sys.exit(1)
+
+
+    patient_id = session.get(
+        "patient_id"
+    )
+
+
+# ============================================================
+# VALIDATE PATIENT ID
+# ============================================================
+
+if patient_id is None:
+
+    log()
+
+    log(
+        "ERROR: patient_id is missing."
+    )
+
+    log()
 
     sys.exit(1)
 
@@ -231,483 +494,1463 @@ try:
         patient_id
     )
 
+
 except (
     ValueError,
     TypeError
 ):
 
-    print(
+    log()
+
+    log(
         "ERROR: Invalid patient_id:"
     )
 
-    print(
+    log(
         patient_id
     )
+
+    log()
+
+    sys.exit(1)
+
+
+if patient_id <= 0:
+
+    log()
+
+    log(
+        "ERROR: Invalid patient ID."
+    )
+
+    log()
 
     sys.exit(1)
 
 
 # ============================================================
-# DISPLAY CURRENT PATIENT
+# WRITE CURRENT PATIENT TO SESSION FILE
 # ============================================================
 
-print(
-    "CURRENT PATIENT ID:",
-    patient_id
-)
+session_data = {
 
-print()
+    "patient_id":
+        patient_id
 
-print(
-    "Session file:"
-)
-
-print(
-    SESSION_FILE
-)
-
-print()
-
-
-# ============================================================
-# CONNECT TO ESP32
-# ============================================================
-
-print(
-    "Connecting to ESP32..."
-)
-
-print(
-    "Serial port:",
-    SERIAL_PORT
-)
-
-print(
-    "Baud rate:",
-    BAUD_RATE
-)
-
-print()
+}
 
 
 try:
 
-    esp32 = serial.Serial(
+    with open(
+        SESSION_FILE,
+        "w",
+        encoding="utf-8"
+    ) as file:
 
-        port=SERIAL_PORT,
+        json.dump(
+            session_data,
+            file,
+            indent=4
+        )
 
-        baudrate=BAUD_RATE,
+        file.flush()
 
-        timeout=1
+        os.fsync(
+            file.fileno()
+        )
 
+
+except Exception as error:
+
+    log()
+
+    log(
+        "ERROR: Could not update patient_session.json"
     )
 
-
-except serial.SerialException as error:
-
-    print()
-
-    print(
-        "ERROR: Could not connect to ESP32."
-    )
-
-    print()
-
-    print(
+    log(
         str(error)
     )
 
-    print()
-
-    print(
-        "Check:"
-    )
-
-    print(
-        "1. ESP32 is connected."
-    )
-
-    print(
-        "2. Correct COM port is selected."
-    )
-
-    print(
-        "3. Arduino Serial Monitor is CLOSED."
-    )
+    log()
 
     sys.exit(1)
 
 
 # ============================================================
-# ALLOW ESP32 TO RESET
+# VERIFY CURRENT PATIENT
 # ============================================================
 
-time.sleep(2)
+try:
 
+    with open(
+        SESSION_FILE,
+        "r",
+        encoding="utf-8"
+    ) as file:
 
-# Clear old serial data
-
-esp32.reset_input_buffer()
-
-esp32.reset_output_buffer()
-
-
-# ============================================================
-# WAIT FOR ESP32 READY
-# ============================================================
-
-print(
-    "Waiting for ESP32..."
-)
-
-print()
-
-
-ready = False
-
-start_wait = time.time()
-
-
-while (
-    time.time() - start_wait
-    < 10
-):
-
-    line = (
-        esp32.readline()
-        .decode(
-            "utf-8",
-            errors="ignore"
+        verified_session = json.load(
+            file
         )
-        .strip()
+
+
+    verified_patient_id = int(
+        verified_session.get(
+            "patient_id"
+        )
     )
 
 
-    if not line:
+except Exception as error:
 
-        continue
+    log()
 
-
-    print(
-        "[ESP32]",
-        line
+    log(
+        "ERROR: Could not verify patient session."
     )
 
-
-    if line == "READY":
-
-        ready = True
-
-        break
-
-
-if not ready:
-
-    print()
-
-    print(
-        "WARNING: ESP32 READY message not received."
+    log(
+        str(error)
     )
 
-    print(
-        "Continuing anyway..."
+    log()
+
+    sys.exit(1)
+
+
+if verified_patient_id != patient_id:
+
+    log()
+
+    log(
+        "=============================================="
     )
 
-    print()
+    log(
+        " PATIENT SESSION MISMATCH"
+    )
+
+    log(
+        "=============================================="
+    )
+
+    log()
+
+    log(
+        "Command-line patient:",
+        patient_id
+    )
+
+    log(
+        "Session patient:",
+        verified_patient_id
+    )
+
+    log()
+
+    sys.exit(1)
 
 
 # ============================================================
-# START MEASUREMENT
+# CURRENT PATIENT
 # ============================================================
 
-print()
-
-print(
-    "================================"
+log(
+    "=============================================="
 )
 
-print(
-    " STARTING SENSOR MEASUREMENT"
+log(
+    " CURRENT PATIENT"
 )
 
-print(
-    "================================"
+log(
+    "=============================================="
 )
 
-print()
+log()
 
-print(
+log(
     "CURRENT PATIENT ID:",
     patient_id
 )
 
-print()
+log()
 
-print(
-    "Place your finger on MAX30102."
-)
-
-print(
-    "Keep your finger completely still."
-)
-
-print()
-
-
-# ============================================================
-# SEND COMMAND TO ESP32
-# ============================================================
-
-esp32.write(
-    b"START_MEASUREMENT\n"
-)
-
-esp32.flush()
-
-
-# ============================================================
-# COLLECT PPG
-# ============================================================
-
-csv_rows = []
-
-collecting = False
-
-measurement_complete = False
-
-measurement_start = time.time()
-
-
-while (
-    time.time() - measurement_start
-    < MEASUREMENT_TIME + 5
-):
-
-    line = (
-        esp32.readline()
-        .decode(
-            "utf-8",
-            errors="ignore"
-        )
-        .strip()
-    )
-
-
-    if not line:
-
-        continue
-
-
-    print(
-        "[ESP32]",
-        line
-    )
-
-
-    # --------------------------------------------------------
-    # CSV HEADER
-    # --------------------------------------------------------
-
-    if line == "timestamp,ir,red":
-
-        collecting = True
-
-        csv_rows.append(
-            line
-        )
-
-        continue
-
-
-    # --------------------------------------------------------
-    # COLLECT CSV DATA
-    # --------------------------------------------------------
-
-    if collecting:
-
-        parts = line.split(",")
-
-
-        if len(parts) == 3:
-
-            try:
-
-                timestamp = int(
-                    parts[0]
-                )
-
-                ir = int(
-                    parts[1]
-                )
-
-                red = int(
-                    parts[2]
-                )
-
-
-                csv_rows.append(
-
-                    f"{timestamp},{ir},{red}"
-
-                )
-
-            except ValueError:
-
-                pass
-
-
-    # --------------------------------------------------------
-    # IMPORTANT:
-    # ESP32 sends:
-    #
-    # MEASUREMENT_COMPLETE
-    #
-    # NOT:
-    #
-    # MEASUREMENT COMPLETE
-    # --------------------------------------------------------
-
-    if line == "MEASUREMENT_COMPLETE":
-
-        measurement_complete = True
-
-        break
-
-
-# ============================================================
-# CLOSE SERIAL
-# ============================================================
-
-esp32.close()
-
-
-# ============================================================
-# CHECK COLLECTION
-# ============================================================
-
-print()
-
-print(
-    "================================"
-)
-
-print(
-    " SENSOR COLLECTION COMPLETE"
-)
-
-print(
-    "================================"
-)
-
-print()
-
-
-sample_count = len(
-    csv_rows
-) - 1
-
-
-print(
-    "Patient ID:",
+log(
+    "This measurement belongs to Patient:",
     patient_id
 )
 
-print(
-    "Collected samples:",
-    sample_count
-)
-
-print()
+log()
 
 
 # ============================================================
-# CHECK MINIMUM SAMPLES
+# DELETE OLD RESULT FILES
 # ============================================================
 
-if len(csv_rows) < 211:
+for old_file in [
 
-    print(
-        "ERROR: Not enough PPG samples collected."
+    VITALS_FILE,
+
+    TEMPERATURE_FILE,
+
+    PPG_FILE
+
+]:
+
+    if os.path.exists(
+        old_file
+    ):
+
+        try:
+
+            os.remove(
+                old_file
+            )
+
+            log(
+                "Old file deleted:",
+                old_file
+            )
+
+
+        except Exception as error:
+
+            log()
+
+            log(
+                "WARNING: Could not delete old file:"
+            )
+
+            log(
+                old_file
+            )
+
+            log(
+                str(error)
+            )
+
+            log()
+
+
+log()
+
+
+# ============================================================
+# CHECK PROCESSING FILES
+# ============================================================
+
+if not os.path.exists(
+    ANALYZE_SCRIPT
+):
+
+    log()
+
+    log(
+        "ERROR: analyze_vitals.py not found."
     )
 
-    print(
-        "Collected:",
-        sample_count
+    log(
+        ANALYZE_SCRIPT
     )
 
-    print(
-        "Required: at least 210"
+    log()
+
+    sys.exit(1)
+
+
+if not os.path.exists(
+    SEND_SCRIPT
+):
+
+    log()
+
+    log(
+        "ERROR: send_to_backend.py not found."
     )
+
+    log(
+        SEND_SCRIPT
+    )
+
+    log()
 
     sys.exit(1)
 
 
 # ============================================================
-# SAVE PPG CSV
+# TEST ESP32 WIFI CONNECTION
 # ============================================================
 
-with open(
-    PPG_FILE,
-    "w",
-    encoding="utf-8"
-) as file:
+log(
+    "=============================================="
+)
 
-    for row in csv_rows:
+log(
+    " CONNECTING TO ESP32 OVER WI-FI"
+)
 
-        file.write(
-            row + "\n"
+log(
+    "=============================================="
+)
+
+log()
+
+log(
+    "ESP32 IP:",
+    ESP32_IP
+)
+
+log()
+
+
+try:
+
+    status_before = esp32_get_json(
+        "/status",
+        timeout=5
+    )
+
+
+except Exception as error:
+
+    log()
+
+    log(
+        "ERROR: Could not connect to ESP32 over Wi-Fi."
+    )
+
+    log()
+
+    log(
+        str(error)
+    )
+
+    log()
+
+    log(
+        "Check:"
+    )
+
+    log(
+        "1. ESP32 is powered."
+    )
+
+    log(
+        "2. ESP32 is connected to DOSS ONEPLUS."
+    )
+
+    log(
+        "3. Laptop is connected to DOSS ONEPLUS."
+    )
+
+    log(
+        "4. ESP32 IP is correct:"
+    )
+
+    log(
+        ESP32_IP
+    )
+
+    log()
+
+    sys.exit(1)
+
+
+log(
+    "ESP32 Wi-Fi connection successful."
+)
+
+log()
+
+log(
+    "ESP32 status:"
+)
+
+log(
+    json.dumps(
+        status_before,
+        indent=4
+    )
+)
+
+log()
+
+
+# ============================================================
+# RESET ESP32 BEFORE NEW MEASUREMENT
+# ============================================================
+#
+# This prevents a previous completed measurement from being
+# accidentally reused.
+#
+# ============================================================
+
+try:
+
+    reset_result = esp32_get_json(
+        "/reset",
+        timeout=5
+    )
+
+
+    log(
+        "ESP32 reset:"
+    )
+
+    log(
+        json.dumps(
+            reset_result,
+            indent=4
+        )
+    )
+
+    log()
+
+
+except Exception as error:
+
+    log()
+
+    log(
+        "WARNING: ESP32 reset request failed."
+    )
+
+    log(
+        str(error)
+    )
+
+    log()
+
+    log(
+        "Continuing with measurement attempt..."
+    )
+
+    log()
+
+
+# ============================================================
+# START SENSOR MEASUREMENT
+# ============================================================
+
+log(
+    "=============================================="
+)
+
+log(
+    " STARTING SENSOR MEASUREMENT"
+)
+
+log(
+    "=============================================="
+)
+
+log()
+
+log(
+    "CURRENT PATIENT:",
+    patient_id
+)
+
+log()
+
+log(
+    "Place your finger on MAX30102."
+)
+
+log(
+    "Keep your finger still."
+)
+
+log()
+
+log(
+    "Starting PPG + temperature collection..."
+)
+
+log()
+
+
+# ============================================================
+# SEND START COMMAND OVER WIFI
+# ============================================================
+
+try:
+
+    start_result = esp32_get_json(
+        "/start",
+        timeout=5
+    )
+
+
+except Exception as error:
+
+    log()
+
+    log(
+        "ERROR: Could not start ESP32 measurement."
+    )
+
+    log()
+
+    log(
+        str(error)
+    )
+
+    log()
+
+    sys.exit(1)
+
+
+log(
+    "ESP32 start response:"
+)
+
+log(
+    json.dumps(
+        start_result,
+        indent=4
+    )
+)
+
+log()
+
+
+# ============================================================
+# VERIFY START RESPONSE
+# ============================================================
+
+start_status = str(
+    start_result.get(
+        "status",
+        ""
+    )
+).lower()
+
+
+if start_status not in [
+
+    "measurement_started",
+    "started"
+
+]:
+
+    if start_status == "already_running":
+
+        log()
+
+        log(
+            "WARNING: ESP32 reported that a measurement is already running."
+        )
+
+        log()
+
+        log(
+            "Waiting for that measurement to finish..."
+        )
+
+        log()
+
+    else:
+
+        log()
+
+        log(
+            "ERROR: ESP32 did not accept measurement start."
+        )
+
+        log(
+            json.dumps(
+                start_result,
+                indent=4
+            )
+        )
+
+        log()
+
+        sys.exit(1)
+
+
+# ============================================================
+# WAIT FOR MEASUREMENT COMPLETE
+# ============================================================
+
+log(
+    "=============================================="
+)
+
+log(
+    " COLLECTING SENSOR DATA"
+)
+
+log(
+    "=============================================="
+)
+
+log()
+
+log(
+    "Measurement duration:",
+    MEASUREMENT_TIME,
+    "seconds"
+)
+
+log()
+
+
+measurement_started_at = time.time()
+
+measurement_complete = False
+
+last_status = None
+
+
+while True:
+
+    elapsed = (
+        time.time()
+        - measurement_started_at
+    )
+
+
+    # --------------------------------------------------------
+    # SAFETY TIMEOUT
+    # --------------------------------------------------------
+
+    if (
+        elapsed
+        >=
+        MEASUREMENT_SAFETY_TIMEOUT
+    ):
+
+        log()
+
+        log(
+            "ERROR: ESP32 measurement safety timeout reached."
+        )
+
+        log(
+            "ESP32 did not report completion within",
+            MEASUREMENT_SAFETY_TIMEOUT,
+            "seconds."
+        )
+
+        log()
+
+        sys.exit(1)
+
+
+    # --------------------------------------------------------
+    # GET STATUS
+    # --------------------------------------------------------
+
+    try:
+
+        status = esp32_get_json(
+            "/status",
+            timeout=5
         )
 
 
-print(
+    except Exception as error:
+
+        log()
+
+        log(
+            "WARNING: Could not read ESP32 status:"
+        )
+
+        log(
+            str(error)
+        )
+
+        log(
+            "Retrying..."
+        )
+
+        log()
+
+        time.sleep(
+            STATUS_POLL_INTERVAL
+        )
+
+        continue
+
+
+    current_measurement = str(
+        status.get(
+            "measurement",
+            ""
+        )
+    ).lower()
+
+
+    samples_now = status.get(
+        "samples",
+        0
+    )
+
+
+    temperature_now = status.get(
+        "temperature",
+        None
+    )
+
+
+    # --------------------------------------------------------
+    # DISPLAY ONLY WHEN STATUS CHANGES OR SAMPLES CHANGE
+    # --------------------------------------------------------
+
+    status_signature = (
+        current_measurement,
+        samples_now,
+        temperature_now
+    )
+
+
+    if (
+        status_signature
+        !=
+        last_status
+    ):
+
+        log(
+            "ESP32:",
+            current_measurement,
+            "| samples:",
+            samples_now,
+            "| temperature:",
+            temperature_now
+        )
+
+        last_status = (
+            status_signature
+        )
+
+
+    # --------------------------------------------------------
+    # COMPLETE
+    # --------------------------------------------------------
+
+    if (
+        current_measurement
+        == "complete"
+    ):
+
+        measurement_complete = True
+
+        log()
+
+        log(
+            "=============================================="
+        )
+
+        log(
+            " ESP32 REPORTED MEASUREMENT COMPLETE"
+        )
+
+        log(
+            "=============================================="
+        )
+
+        log()
+
+        break
+
+
+    # --------------------------------------------------------
+    # WAIT
+    # --------------------------------------------------------
+
+    time.sleep(
+        STATUS_POLL_INTERVAL
+    )
+
+
+# ============================================================
+# DOWNLOAD FINAL SENSOR DATA
+# ============================================================
+
+log(
+    "=============================================="
+)
+
+log(
+    " DOWNLOADING SENSOR DATA"
+)
+
+log(
+    "=============================================="
+)
+
+log()
+
+
+try:
+
+    sensor_data = esp32_get_json(
+        "/data",
+        timeout=30
+    )
+
+
+except Exception as error:
+
+    log()
+
+    log(
+        "ERROR: Could not download sensor data from ESP32."
+    )
+
+    log()
+
+    log(
+        str(error)
+    )
+
+    log()
+
+    sys.exit(1)
+
+
+# ============================================================
+# VERIFY DATA RESPONSE
+# ============================================================
+
+data_status = str(
+    sensor_data.get(
+        "status",
+        ""
+    )
+).lower()
+
+
+if data_status != "complete":
+
+    log()
+
+    log(
+        "ERROR: ESP32 data is not marked complete."
+    )
+
+    log()
+
+    log(
+        json.dumps(
+            sensor_data,
+            indent=4
+        )[:2000]
+    )
+
+    log()
+
+    sys.exit(1)
+
+
+# ============================================================
+# GET PPG SAMPLES
+# ============================================================
+
+ppg_samples = sensor_data.get(
+    "samples",
+    []
+)
+
+
+if not isinstance(
+    ppg_samples,
+    list
+):
+
+    log()
+
+    log(
+        "ERROR: ESP32 returned invalid PPG sample list."
+    )
+
+    log()
+
+    sys.exit(1)
+
+
+# ============================================================
+# GET TEMPERATURE
+# ============================================================
+
+temperature_value = sensor_data.get(
+    "temperature"
+)
+
+
+# ============================================================
+# VALIDATE TEMPERATURE
+# ============================================================
+
+if temperature_value is None:
+
+    log()
+
+    log(
+        "ERROR: No temperature value received from ESP32."
+    )
+
+    log()
+
+    log(
+        "ESP32 must return a valid temperature."
+    )
+
+    log()
+
+    sys.exit(1)
+
+
+try:
+
+    temperature_value = float(
+        temperature_value
+    )
+
+
+except (
+    ValueError,
+    TypeError
+):
+
+    log()
+
+    log(
+        "ERROR: Invalid temperature received:"
+    )
+
+    log(
+        temperature_value
+    )
+
+    log()
+
+    sys.exit(1)
+
+
+# ============================================================
+# CONVERT PPG SAMPLES
+# ============================================================
+
+csv_rows = [
+
+    "timestamp,ir,red"
+
+]
+
+
+valid_sample_count = 0
+
+
+for sample in ppg_samples:
+
+    if not isinstance(
+        sample,
+        dict
+    ):
+
+        continue
+
+
+    try:
+
+        timestamp = int(
+            sample.get(
+                "timestamp"
+            )
+        )
+
+        ir = int(
+            sample.get(
+                "ir"
+            )
+        )
+
+        red = int(
+            sample.get(
+                "red"
+            )
+        )
+
+
+    except (
+        ValueError,
+        TypeError
+    ):
+
+        continue
+
+
+    # --------------------------------------------------------
+    # BASIC VALIDATION
+    # --------------------------------------------------------
+
+    if timestamp < 0:
+
+        continue
+
+
+    if ir <= 0:
+
+        continue
+
+
+    if red <= 0:
+
+        continue
+
+
+    csv_rows.append(
+        f"{timestamp},{ir},{red}"
+    )
+
+
+    valid_sample_count += 1
+
+
+# ============================================================
+# SENSOR COLLECTION SUMMARY
+# ============================================================
+
+log()
+
+log(
+    "=============================================="
+)
+
+log(
+    " SENSOR COLLECTION COMPLETE"
+)
+
+log(
+    "=============================================="
+)
+
+log()
+
+log(
+    "Patient ID:",
+    patient_id
+)
+
+log(
+    "Collected PPG samples:",
+    valid_sample_count
+)
+
+log(
+    "Temperature received:",
+    temperature_value
+)
+
+log(
+    "Measurement complete:",
+    measurement_complete
+)
+
+log()
+
+
+# ============================================================
+# REQUIRE MEASUREMENT COMPLETE
+# ============================================================
+
+if not measurement_complete:
+
+    log()
+
+    log(
+        "ERROR: ESP32 measurement is not complete."
+    )
+
+    log()
+
+    sys.exit(1)
+
+
+# ============================================================
+# REQUIRE PPG
+# ============================================================
+
+if (
+    valid_sample_count
+    <
+    MINIMUM_PPG_SAMPLES
+):
+
+    log()
+
+    log(
+        "ERROR: Not enough PPG samples collected."
+    )
+
+    log()
+
+    log(
+        "Collected:",
+        valid_sample_count
+    )
+
+    log(
+        "Required:",
+        MINIMUM_PPG_SAMPLES
+    )
+
+    log()
+
+    sys.exit(1)
+
+
+# ============================================================
+# SAVE PPG
+# ============================================================
+
+try:
+
+    with open(
+        PPG_FILE,
+        "w",
+        encoding="utf-8"
+    ) as file:
+
+        for row in csv_rows:
+
+            file.write(
+                row + "\n"
+            )
+
+        file.flush()
+
+        os.fsync(
+            file.fileno()
+        )
+
+
+except Exception as error:
+
+    log()
+
+    log(
+        "ERROR: Could not save PPG recording."
+    )
+
+    log(
+        str(error)
+    )
+
+    log()
+
+    sys.exit(1)
+
+
+log(
     "PPG recording saved:"
 )
 
-print(
+log(
     PPG_FILE
 )
 
-print()
+log()
+
+
+# ============================================================
+# SAVE TEMPERATURE
+# ============================================================
+
+log(
+    "=============================================="
+)
+
+log(
+    " SAVING TEMPERATURE"
+)
+
+log(
+    "=============================================="
+)
+
+log()
+
+
+temperature_data = {
+
+    "patient_id":
+        patient_id,
+
+    "temperature":
+        temperature_value
+
+}
+
+
+try:
+
+    with open(
+        TEMPERATURE_FILE,
+        "w",
+        encoding="utf-8"
+    ) as file:
+
+        json.dump(
+            temperature_data,
+            file,
+            indent=4
+        )
+
+        file.flush()
+
+        os.fsync(
+            file.fileno()
+        )
+
+
+except Exception as error:
+
+    log()
+
+    log(
+        "ERROR: Could not create temperature.json"
+    )
+
+    log(
+        str(error)
+    )
+
+    log()
+
+    sys.exit(1)
+
+
+log(
+    "Temperature saved:"
+)
+
+log(
+    temperature_value,
+    "°C"
+)
+
+log()
+
+
+# ============================================================
+# VERIFY TEMPERATURE FILE
+# ============================================================
+
+try:
+
+    with open(
+        TEMPERATURE_FILE,
+        "r",
+        encoding="utf-8"
+    ) as file:
+
+        verified_temperature = json.load(
+            file
+        )
+
+
+except Exception as error:
+
+    log()
+
+    log(
+        "ERROR: Could not verify temperature.json"
+    )
+
+    log(
+        str(error)
+    )
+
+    log()
+
+    sys.exit(1)
+
+
+# ============================================================
+# VERIFY TEMPERATURE PATIENT
+# ============================================================
+
+try:
+
+    temperature_patient_id = int(
+        verified_temperature.get(
+            "patient_id"
+        )
+    )
+
+
+except (
+    ValueError,
+    TypeError
+):
+
+    log()
+
+    log(
+        "ERROR: Invalid patient ID in temperature.json."
+    )
+
+    log()
+
+    sys.exit(1)
+
+
+if (
+    temperature_patient_id
+    !=
+    patient_id
+):
+
+    log()
+
+    log(
+        "=============================================="
+    )
+
+    log(
+        " TEMPERATURE PATIENT ID MISMATCH"
+    )
+
+    log(
+        "=============================================="
+    )
+
+    log()
+
+    log(
+        "Current patient:",
+        patient_id
+    )
+
+    log(
+        "Temperature patient:",
+        temperature_patient_id
+    )
+
+    log()
+
+    sys.exit(1)
 
 
 # ============================================================
 # RUN VITAL ANALYSIS
 # ============================================================
 
-print(
-    "================================"
+log(
+    "=============================================="
 )
 
-print(
+log(
     " RUNNING VITAL ANALYSIS"
 )
 
-print(
-    "================================"
+log(
+    "=============================================="
 )
 
-print()
+log()
 
-
-analysis_result = subprocess.run(
-
-    [
-        sys.executable,
-        ANALYZE_SCRIPT
-    ],
-
-    cwd=PROJECT_DIR
-
+log(
+    "Patient ID:",
+    patient_id
 )
 
+log(
+    "PPG samples:",
+    valid_sample_count
+)
 
-if analysis_result.returncode != 0:
+log(
+    "Temperature:",
+    temperature_value,
+    "°C"
+)
 
-    print()
+log()
 
-    print(
-        "ERROR: Vital analysis failed."
+
+# ============================================================
+# RUN analyze_vitals.py
+# ============================================================
+
+try:
+
+    analysis_result = subprocess.run(
+
+        [
+            sys.executable,
+            ANALYZE_SCRIPT
+        ],
+
+        cwd=PROJECT_DIR,
+
+        check=False
+
     )
+
+
+except Exception as error:
+
+    log()
+
+    log(
+        "ERROR: Could not start analyze_vitals.py"
+    )
+
+    log(
+        str(error)
+    )
+
+    log()
+
+    sys.exit(1)
+
+
+log()
+
+log(
+    "analyze_vitals.py returned:",
+    analysis_result.returncode
+)
+
+log()
+
+
+if (
+    analysis_result.returncode
+    !=
+    0
+):
+
+    log()
+
+    log(
+        "=============================================="
+    )
+
+    log(
+        " ERROR: VITAL ANALYSIS FAILED"
+    )
+
+    log(
+        "=============================================="
+    )
+
+    log()
+
+    log(
+        "analyze_vitals.py returned:",
+        analysis_result.returncode
+    )
+
+    log()
 
     sys.exit(
         analysis_result.returncode
@@ -715,171 +1958,352 @@ if analysis_result.returncode != 0:
 
 
 # ============================================================
-# CHECK VITALS JSON
+# CHECK VITALS RESULT
 # ============================================================
 
 if not os.path.exists(
     VITALS_FILE
 ):
 
-    print(
+    log()
+
+    log(
         "ERROR: vitals_result.json was not created."
     )
 
+    log(
+        VITALS_FILE
+    )
+
+    log()
+
     sys.exit(1)
 
 
 # ============================================================
-# LOAD VITALS JSON
+# READ VITALS RESULT
 # ============================================================
 
-with open(
-    VITALS_FILE,
-    "r",
-    encoding="utf-8"
-) as file:
+try:
 
-    vitals = json.load(
-        file
+    with open(
+        VITALS_FILE,
+        "r",
+        encoding="utf-8"
+    ) as file:
+
+        vitals = json.load(
+            file
+        )
+
+
+except Exception as error:
+
+    log()
+
+    log(
+        "ERROR: Could not read vitals_result.json"
     )
 
-
-# ============================================================
-# VERIFY PATIENT ID
-# ============================================================
-
-result_patient_id = vitals.get(
-    "patient_id"
-)
-
-
-if result_patient_id is None:
-
-    print()
-
-    print(
-        "ERROR: patient_id missing from vitals_result.json"
+    log(
+        str(error)
     )
+
+    log()
 
     sys.exit(1)
 
 
-if int(result_patient_id) != patient_id:
+# ============================================================
+# VERIFY RESULT PATIENT ID
+# ============================================================
 
-    print()
+try:
 
-    print(
-        "================================"
+    result_patient_id = int(
+        vitals.get(
+            "patient_id"
+        )
     )
 
-    print(
-        " PATIENT ID MISMATCH!"
+
+except (
+    ValueError,
+    TypeError
+):
+
+    log()
+
+    log(
+        "ERROR: Invalid patient_id in vitals_result.json."
     )
 
-    print(
-        "================================"
+    log()
+
+    sys.exit(1)
+
+
+# ============================================================
+# FINAL PATIENT SAFETY CHECK
+# ============================================================
+
+if (
+    result_patient_id
+    !=
+    patient_id
+):
+
+    log()
+
+    log(
+        "=============================================="
     )
 
-    print()
+    log(
+        "       PATIENT ID MISMATCH!"
+    )
 
-    print(
-        "Session patient:",
+    log(
+        "=============================================="
+    )
+
+    log()
+
+    log(
+        "Current patient:",
         patient_id
     )
 
-    print(
+    log(
         "Result patient:",
         result_patient_id
     )
 
-    print()
+    log()
 
-    print(
+    log(
         "The measurement will NOT be sent."
     )
 
-    print(
-        "Check analyze_vitals.py."
-    )
+    log()
 
     sys.exit(1)
 
 
 # ============================================================
-# DISPLAY VITALS
+# FORCE REAL TEMPERATURE INTO FINAL RESULT
 # ============================================================
 
-print()
-
-print(
-    "================================"
+vitals["temperature"] = (
+    temperature_value
 )
 
-print(
-    " MEASUREMENT RESULT"
+
+# ============================================================
+# SAVE FINAL RESULT AGAIN
+# ============================================================
+
+try:
+
+    with open(
+        VITALS_FILE,
+        "w",
+        encoding="utf-8"
+    ) as file:
+
+        json.dump(
+            vitals,
+            file,
+            indent=4
+        )
+
+        file.flush()
+
+        os.fsync(
+            file.fileno()
+        )
+
+
+except Exception as error:
+
+    log()
+
+    log(
+        "ERROR: Could not update vitals_result.json"
+    )
+
+    log(
+        str(error)
+    )
+
+    log()
+
+    sys.exit(1)
+
+
+# ============================================================
+# DISPLAY FINAL VITALS
+# ============================================================
+
+log()
+
+log(
+    "=============================================="
 )
 
-print(
-    "================================"
+log(
+    " FINAL VITALS"
 )
 
-print()
+log(
+    "=============================================="
+)
 
-print(
+log()
+
+log(
     "Patient ID:",
     patient_id
 )
 
-print()
+log()
 
-print(
+log(
+    "Temperature:",
+    vitals.get(
+        "temperature"
+    ),
+    "°C"
+)
+
+log(
+    "Heart Rate:",
+    vitals.get(
+        "heart_rate"
+    ),
+    "BPM"
+)
+
+log(
+    "SpO2:",
+    vitals.get(
+        "spo2"
+    ),
+    "%"
+)
+
+log(
+    "Blood Pressure:",
+    vitals.get(
+        "systolic_bp"
+    ),
+    "/",
+    vitals.get(
+        "diastolic_bp"
+    ),
+    "mmHg"
+)
+
+log()
+
+log(
+    "Complete result:"
+)
+
+log(
     json.dumps(
         vitals,
         indent=4
     )
 )
 
-print()
+log()
 
 
 # ============================================================
-# SEND TO FLASK
+# SEND RESULT TO FLASK / MYSQL
 # ============================================================
 
-print(
-    "================================"
+log(
+    "=============================================="
 )
 
-print(
-    " SENDING TO FLASK"
+log(
+    " SENDING RESULT TO FLASK"
 )
 
-print(
-    "================================"
+log(
+    "=============================================="
 )
 
-print()
+log()
 
 
-send_result = subprocess.run(
+try:
 
-    [
-        sys.executable,
-        SEND_SCRIPT
-    ],
+    send_result = subprocess.run(
 
-    cwd=PROJECT_DIR
+        [
+            sys.executable,
+            SEND_SCRIPT
+        ],
 
-)
+        cwd=PROJECT_DIR,
 
+        check=False
 
-if send_result.returncode != 0:
-
-    print()
-
-    print(
-        "ERROR: Failed to send vitals to Flask."
     )
+
+
+except Exception as error:
+
+    log()
+
+    log(
+        "ERROR: Could not start send_to_backend.py"
+    )
+
+    log(
+        str(error)
+    )
+
+    log()
+
+    sys.exit(1)
+
+
+# ============================================================
+# CHECK DATABASE SEND
+# ============================================================
+
+if (
+    send_result.returncode
+    !=
+    0
+):
+
+    log()
+
+    log(
+        "=============================================="
+    )
+
+    log(
+        " ERROR: FAILED TO SEND VITALS TO FLASK"
+    )
+
+    log(
+        "=============================================="
+    )
+
+    log()
+
+    log(
+        "Return code:",
+        send_result.returncode
+    )
+
+    log()
 
     sys.exit(
         send_result.returncode
@@ -887,54 +2311,87 @@ if send_result.returncode != 0:
 
 
 # ============================================================
-# COMPLETE
+# ALL DONE
 # ============================================================
 
-print()
+log()
 
-print(
-    "================================"
+log(
+    "=============================================="
 )
 
-print(
-    " HEALTH CHECK COMPLETE"
+log(
+    "       HEALTH CHECK COMPLETE"
 )
 
-print(
-    "================================"
+log(
+    "=============================================="
 )
 
-print()
+log()
 
-print(
+log(
     "Patient ID:",
     patient_id
 )
 
-print(
+log(
+    "Temperature:",
+    vitals.get(
+        "temperature"
+    ),
+    "°C"
+)
+
+log(
     "Heart Rate:",
-    vitals.get("heart_rate"),
+    vitals.get(
+        "heart_rate"
+    ),
     "BPM"
 )
 
-print(
+log(
     "SpO2:",
-    vitals.get("spo2"),
+    vitals.get(
+        "spo2"
+    ),
     "%"
 )
 
-print(
+log(
     "Blood Pressure:",
-    vitals.get("systolic_bp"),
+    vitals.get(
+        "systolic_bp"
+    ),
     "/",
-    vitals.get("diastolic_bp"),
+    vitals.get(
+        "diastolic_bp"
+    ),
     "mmHg"
 )
 
-print()
+log()
 
-print(
+log(
     "Data stored in Flask/MySQL."
 )
 
-print()
+log()
+
+log(
+    "=============================================="
+)
+
+log(
+    "              ALL DONE"
+)
+
+log(
+    "=============================================="
+)
+
+log()
+
+
+sys.exit(0)

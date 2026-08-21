@@ -4,7 +4,6 @@ import json
 
 import pandas as pd
 import numpy as np
-
 from scipy.signal import butter, filtfilt, find_peaks
 
 
@@ -37,41 +36,11 @@ RAW_DIR = os.path.join(
 
 
 # ============================================================
-# FLASK BACKEND SESSION FILE
-# ============================================================
-#
-# The current patient session is created by Flask:
-#
-# C:\Users\shrih\PycharmProjects\
-# health_kiosk_backend\data\patient_session.json
-#
-# We MUST read this file so that the sensor result belongs
-# to the patient currently using the kiosk.
-# ============================================================
-
-FLASK_BACKEND_DIR = os.path.join(
-    os.path.expanduser("~"),
-    "PycharmProjects",
-    "health_kiosk_backend"
-)
-
-FLASK_SESSION_FILE = os.path.join(
-    FLASK_BACKEND_DIR,
-    "data",
-    "patient_session.json"
-)
-
-
-# ============================================================
-# IMPORT BP ML MODEL
+# IMPORT BP MODEL
 # ============================================================
 
 if ML_DIR not in sys.path:
-
-    sys.path.insert(
-        0,
-        ML_DIR
-    )
+    sys.path.insert(0, ML_DIR)
 
 
 try:
@@ -101,94 +70,303 @@ OUTPUT_FILE = os.path.join(
     "vitals_result.json"
 )
 
+TEMPERATURE_FILE = os.path.join(
+    DATA_DIR,
+    "temperature.json"
+)
+
+SESSION_FILE = os.path.join(
+    DATA_DIR,
+    "patient_session.json"
+)
+
 
 # ============================================================
-# START
+# CONFIGURATION
+# ============================================================
+
+MINIMUM_PPG_SAMPLES = 210
+
+MINIMUM_SAMPLING_RATE = 8.0
+
+LOW_CUTOFF = 0.5
+
+MAX_HIGH_CUTOFF = 4.0
+
+
+# ============================================================
+# ERROR FUNCTION
+# ============================================================
+
+def fail(message):
+
+    print()
+    print("==============================================")
+    print(" ERROR: VITAL ANALYSIS FAILED")
+    print("==============================================")
+    print()
+    print(message)
+    print()
+
+    sys.exit(1)
+
+
+# ============================================================
+# HEADER
 # ============================================================
 
 print()
-
-print(
-    "================================"
-)
-
-print(
-    " VITAL SIGN ANALYSIS"
-)
-
-print(
-    "================================"
-)
-
+print("==============================================")
+print("       VITAL SIGN ANALYSIS")
+print("==============================================")
 print()
 
 
 # ============================================================
-# CHECK FLASK SESSION
+# GET PATIENT ID
 # ============================================================
 
-if not os.path.exists(
-    FLASK_SESSION_FILE
-):
+patient_id = None
 
-    raise FileNotFoundError(
 
-        "Patient measurement session not found.\n\n"
+# ============================================================
+# COMMAND-LINE PATIENT ID
+# ============================================================
 
-        f"Expected file:\n"
-        f"{FLASK_SESSION_FILE}\n\n"
+if len(sys.argv) >= 2:
 
-        "Start the health check from the "
-        "patient frontend first."
+    try:
+
+        patient_id = int(
+            sys.argv[1]
+        )
+
+    except (
+        ValueError,
+        TypeError
+    ):
+
+        fail(
+            "Invalid patient ID passed to "
+            "analyze_vitals.py:\n"
+            + str(sys.argv[1])
+        )
+
+    print(
+        "Patient ID received from sensor controller:"
+    )
+
+    print(
+        patient_id
+    )
+
+    print()
+
+
+# ============================================================
+# PATIENT SESSION FALLBACK
+# ============================================================
+
+else:
+
+    print(
+        "No patient ID argument received."
+    )
+
+    print(
+        "Reading patient_session.json..."
+    )
+
+    print()
+
+
+    if not os.path.exists(
+        SESSION_FILE
+    ):
+
+        fail(
+            "patient_session.json not found.\n"
+            f"Expected:\n{SESSION_FILE}"
+        )
+
+
+    try:
+
+        with open(
+            SESSION_FILE,
+            "r",
+            encoding="utf-8"
+        ) as file:
+
+            session = json.load(
+                file
+            )
+
+    except Exception as error:
+
+        fail(
+            "Could not read patient_session.json:\n"
+            + str(error)
+        )
+
+
+    patient_id = session.get(
+        "patient_id"
     )
 
 
+    if patient_id is None:
+
+        fail(
+            "patient_id is missing from "
+            "patient_session.json"
+        )
+
+
+    try:
+
+        patient_id = int(
+            patient_id
+        )
+
+    except (
+        ValueError,
+        TypeError
+    ):
+
+        fail(
+            "Invalid patient_id in "
+            "patient_session.json"
+        )
+
+
 # ============================================================
-# LOAD CURRENT PATIENT SESSION
+# VALIDATE PATIENT ID
 # ============================================================
+
+if patient_id <= 0:
+
+    fail(
+        "Patient ID must be greater than 0."
+    )
+
+
+print(
+    "=============================================="
+)
+
+print(
+    " CURRENT PATIENT"
+)
+
+print(
+    "=============================================="
+)
+
+print()
+
+print(
+    "CURRENT PATIENT ID:",
+    patient_id
+)
+
+print()
+
+
+# ============================================================
+# READ TEMPERATURE
+# ============================================================
+
+print(
+    "=============================================="
+)
+
+print(
+    " READING TEMPERATURE"
+)
+
+print(
+    "=============================================="
+)
+
+print()
+
+print(
+    "Temperature file:"
+)
+
+print(
+    TEMPERATURE_FILE
+)
+
+print()
+
+
+if not os.path.isfile(
+    TEMPERATURE_FILE
+):
+
+    fail(
+        "temperature.json does not exist.\n"
+        f"Expected:\n{TEMPERATURE_FILE}"
+    )
+
 
 try:
 
     with open(
-        FLASK_SESSION_FILE,
+        TEMPERATURE_FILE,
         "r",
         encoding="utf-8"
     ) as file:
 
-        session = json.load(
+        temperature_json = json.load(
             file
         )
 
 except Exception as error:
 
-    raise RuntimeError(
-        "Could not read patient_session.json.\n"
-        f"File: {FLASK_SESSION_FILE}\n"
-        f"Error: {error}"
+    fail(
+        "Could not read temperature.json:\n"
+        + str(error)
     )
 
 
+print(
+    "Temperature JSON received:"
+)
+
+print(
+    json.dumps(
+        temperature_json,
+        indent=4
+    )
+)
+
+print()
+
+
 # ============================================================
-# GET CURRENT PATIENT ID
+# GET TEMPERATURE
 # ============================================================
 
-patient_id = session.get(
-    "patient_id"
+raw_temperature = temperature_json.get(
+    "temperature"
 )
 
 
-if patient_id is None:
+if raw_temperature is None:
 
-    raise ValueError(
-        "patient_id is missing from "
-        "patient_session.json"
+    fail(
+        "temperature.json contains no "
+        "temperature value."
     )
 
 
 try:
 
-    patient_id = int(
-        patient_id
+    temperature = float(
+        raw_temperature
     )
 
 except (
@@ -196,61 +374,107 @@ except (
     TypeError
 ):
 
-    raise ValueError(
-        "Invalid patient_id in "
-        "patient_session.json"
+    fail(
+        "Invalid temperature value in "
+        "temperature.json."
     )
 
 
-if patient_id <= 0:
+temperature = round(
+    temperature,
+    2
+)
 
-    raise ValueError(
-        "patient_id must be greater than 0."
+
+# ============================================================
+# CHECK TEMPERATURE PATIENT ID
+# ============================================================
+
+temperature_patient_id = (
+    temperature_json.get(
+        "patient_id"
+    )
+)
+
+
+if temperature_patient_id is None:
+
+    fail(
+        "temperature.json does not contain patient_id."
     )
 
 
-# ============================================================
-# DISPLAY CURRENT PATIENT
-# ============================================================
+try:
+
+    temperature_patient_id = int(
+        temperature_patient_id
+    )
+
+except (
+    ValueError,
+    TypeError
+):
+
+    fail(
+        "Invalid patient_id in temperature.json."
+    )
+
 
 print(
-    "Current Patient ID:",
+    "Current patient:",
     patient_id
 )
 
-print()
-
 print(
-    "Session file:"
-)
-
-print(
-    FLASK_SESSION_FILE
+    "Temperature patient:",
+    temperature_patient_id
 )
 
 print()
 
 
 # ============================================================
-# CHECK PPG INPUT
+# TEMPERATURE PATIENT SAFETY CHECK
 # ============================================================
 
-if not os.path.exists(
-    INPUT_FILE
-):
+if temperature_patient_id != patient_id:
 
-    raise FileNotFoundError(
-
-        "PPG recording not found.\n\n"
-
-        f"Expected file:\n{INPUT_FILE}\n\n"
-
-        "Collect PPG data from ESP32 first."
+    fail(
+        "Patient ID mismatch.\n"
+        f"Current patient: {patient_id}\n"
+        f"Temperature patient: {temperature_patient_id}"
     )
 
 
 print(
-    "Input file:"
+    "Temperature patient ID verified."
+)
+
+print(
+    "Temperature:",
+    temperature,
+    "°C"
+)
+
+print()
+
+
+# ============================================================
+# CHECK PPG FILE
+# ============================================================
+
+if not os.path.isfile(
+    INPUT_FILE
+):
+
+    fail(
+        "PPG recording not found:\n"
+        f"{INPUT_FILE}"
+    )
+
+
+print(
+    "PPG input file:"
 )
 
 print(
@@ -261,12 +485,21 @@ print()
 
 
 # ============================================================
-# LOAD CSV
+# LOAD PPG CSV
 # ============================================================
 
-df = pd.read_csv(
-    INPUT_FILE
-)
+try:
+
+    df = pd.read_csv(
+        INPUT_FILE
+    )
+
+except Exception as error:
+
+    fail(
+        "Could not load PPG CSV:\n"
+        + str(error)
+    )
 
 
 print(
@@ -282,7 +515,7 @@ print()
 
 
 # ============================================================
-# CHECK REQUIRED COLUMNS
+# REQUIRED COLUMNS
 # ============================================================
 
 required_columns = [
@@ -292,26 +525,13 @@ required_columns = [
 ]
 
 
-missing_columns = [
+for column in required_columns:
 
-    column
+    if column not in df.columns:
 
-    for column in required_columns
-
-    if column not in df.columns
-
-]
-
-
-if missing_columns:
-
-    raise ValueError(
-
-        "Missing CSV columns: "
-        + ", ".join(
-            missing_columns
+        fail(
+            f"Missing required column: {column}"
         )
-    )
 
 
 # ============================================================
@@ -335,10 +555,24 @@ df["red"] = pd.to_numeric(
 
 
 # ============================================================
-# REMOVE INVALID ROWS
+# REMOVE INVALID DATA
 # ============================================================
 
 df = df.dropna()
+
+df = df[
+    np.isfinite(
+        df["timestamp"]
+    )
+    &
+    np.isfinite(
+        df["ir"]
+    )
+    &
+    np.isfinite(
+        df["red"]
+    )
+]
 
 
 print(
@@ -353,55 +587,59 @@ print()
 # MINIMUM SAMPLE CHECK
 # ============================================================
 
-if len(df) < 210:
+if len(df) < MINIMUM_PPG_SAMPLES:
 
-    raise ValueError(
-
+    fail(
         "Not enough PPG samples.\n"
-
-        "Required: at least 210 samples.\n"
-
-        f"Available: {len(df)} samples."
+        f"Collected: {len(df)}\n"
+        f"Required: at least {MINIMUM_PPG_SAMPLES}"
     )
 
 
 # ============================================================
-# EXTRACT SIGNALS
+# GET SIGNALS
 # ============================================================
 
-timestamp = df[
-    "timestamp"
-].values.astype(float)
+timestamp = (
+    df["timestamp"]
+    .values
+    .astype(float)
+)
 
+ir = (
+    df["ir"]
+    .values
+    .astype(float)
+)
 
-ir = df[
-    "ir"
-].values.astype(float)
-
-
-red = df[
-    "red"
-].values.astype(float)
+red = (
+    df["red"]
+    .values
+    .astype(float)
+)
 
 
 # ============================================================
-# ESTIMATE SAMPLING RATE
+# CALCULATE SAMPLE INTERVAL
 # ============================================================
 
 time_difference = np.diff(
     timestamp
 )
 
+time_difference = (
+    time_difference[
+        time_difference > 0
+    ]
+)
 
-time_difference = time_difference[
-    time_difference > 0
-]
 
+if len(
+    time_difference
+) == 0:
 
-if len(time_difference) == 0:
-
-    raise ValueError(
-        "Invalid timestamps in PPG data."
+    fail(
+        "Invalid timestamps."
     )
 
 
@@ -412,19 +650,69 @@ median_difference = np.median(
 
 if median_difference <= 0:
 
-    raise ValueError(
-        "Invalid timestamp interval."
+    fail(
+        "Invalid median timestamp difference."
     )
 
 
-# ESP32 timestamp is milliseconds.
+# ============================================================
+# CALCULATE SAMPLING RATE
+# ============================================================
 
-fs = 1000.0 / median_difference
+fs = (
+    1000.0
+    /
+    median_difference
+)
 
 
 print(
     "Estimated sampling rate:",
-    round(fs, 2),
+    round(
+        fs,
+        2
+    ),
+    "Hz"
+)
+
+print(
+    "Median sample interval:",
+    round(
+        median_difference,
+        2
+    ),
+    "ms"
+)
+
+print()
+
+
+# ============================================================
+# SAMPLING RATE CHECK
+# ============================================================
+
+if fs < MINIMUM_SAMPLING_RATE:
+
+    fail(
+        "Sampling rate is too low for PPG analysis.\n"
+        f"Detected: {fs:.2f} Hz\n"
+        f"Minimum supported: {MINIMUM_SAMPLING_RATE:.2f} Hz"
+    )
+
+
+# ============================================================
+# NYQUIST FREQUENCY
+# ============================================================
+
+nyquist = fs / 2.0
+
+
+print(
+    "Nyquist frequency:",
+    round(
+        nyquist,
+        3
+    ),
     "Hz"
 )
 
@@ -432,74 +720,113 @@ print()
 
 
 # ============================================================
-# CHECK SAMPLING RATE
+# ADAPTIVE BANDPASS FILTER
 # ============================================================
 
-if fs < 20:
-
-    raise ValueError(
-
-        "Sampling rate is too low.\n"
-
-        f"Detected: {fs:.2f} Hz\n"
-
-        "Collect a new PPG recording."
-    )
+low_cutoff = LOW_CUTOFF
 
 
-# ============================================================
-# BANDPASS FILTER
-# ============================================================
-
-low_cutoff = 0.5
-
-high_cutoff = 5.0
-
-nyquist = fs / 2.0
-
-
-if high_cutoff >= nyquist:
-
-    raise ValueError(
-
-        "Sampling rate is too low "
-        "for the selected filter."
-    )
-
-
-b, a = butter(
-
-    3,
-
-    [
-        low_cutoff / nyquist,
-        high_cutoff / nyquist
-    ],
-
-    btype="band"
+high_cutoff = min(
+    MAX_HIGH_CUTOFF,
+    nyquist * 0.65
 )
+
+
+if high_cutoff <= low_cutoff:
+
+    fail(
+        "Sampling rate is too low for the PPG filter.\n"
+        f"Sampling rate: {fs:.2f} Hz\n"
+        f"Nyquist: {nyquist:.2f} Hz"
+    )
+
+
+print(
+    "PPG filter:"
+)
+
+print(
+    "Low cutoff:",
+    round(
+        low_cutoff,
+        3
+    ),
+    "Hz"
+)
+
+print(
+    "High cutoff:",
+    round(
+        high_cutoff,
+        3
+    ),
+    "Hz"
+)
+
+print()
+
+
+# ============================================================
+# CREATE BANDPASS FILTER
+# ============================================================
+
+try:
+
+    b, a = butter(
+        3,
+        [
+            low_cutoff / nyquist,
+            high_cutoff / nyquist
+        ],
+        btype="band"
+    )
+
+except Exception as error:
+
+    fail(
+        "Could not create PPG bandpass filter:\n"
+        + str(error)
+    )
 
 
 # ============================================================
 # FILTER IR
 # ============================================================
 
-filtered_ir = filtfilt(
-    b,
-    a,
-    ir
-)
+try:
+
+    filtered_ir = filtfilt(
+        b,
+        a,
+        ir
+    )
+
+except Exception as error:
+
+    fail(
+        "IR PPG filtering failed:\n"
+        + str(error)
+    )
 
 
 # ============================================================
 # FILTER RED
 # ============================================================
 
-filtered_red = filtfilt(
-    b,
-    a,
-    red
-)
+try:
+
+    filtered_red = filtfilt(
+        b,
+        a,
+        red
+    )
+
+except Exception as error:
+
+    fail(
+        "RED PPG filtering failed:\n"
+        + str(error)
+    )
 
 
 # ============================================================
@@ -507,7 +834,7 @@ filtered_red = filtfilt(
 # ============================================================
 
 print(
-    "================================"
+    "=============================================="
 )
 
 print(
@@ -515,30 +842,79 @@ print(
 )
 
 print(
-    "================================"
+    "=============================================="
 )
+
+print()
+
+
+# ============================================================
+# METHOD 1 - NORMAL / RELAXED PEAK DETECTION
+# ============================================================
+
+signal_std = np.std(
+    filtered_ir
+)
+
+prominence = (
+    signal_std * 0.10
+)
+
+if prominence <= 0:
+
+    prominence = 1e-9
 
 
 minimum_distance = max(
     1,
-    int(0.4 * fs)
+    int(
+        0.30 * fs
+    )
 )
 
 
-prominence = (
-    np.std(filtered_ir)
-    * 0.5
+print(
+    "Signal standard deviation:",
+    round(
+        signal_std,
+        4
+    )
 )
 
-
-peaks, properties = find_peaks(
-
-    filtered_ir,
-
-    distance=minimum_distance,
-
-    prominence=prominence
+print(
+    "Peak prominence:",
+    round(
+        prominence,
+        4
+    )
 )
+
+print()
+
+
+try:
+
+    peaks, _ = find_peaks(
+
+        filtered_ir,
+
+        distance=minimum_distance,
+
+        prominence=prominence
+
+    )
+
+except Exception as error:
+
+    print(
+        "Peak detection failed:"
+    )
+
+    print(
+        str(error)
+    )
+
+    peaks = []
 
 
 print(
@@ -546,51 +922,428 @@ print(
     len(peaks)
 )
 
+print()
+
 
 heart_rate = None
 
 
+# ============================================================
+# CALCULATE HR FROM PEAK INTERVALS
+# ============================================================
+
 if len(peaks) >= 2:
 
     intervals = (
-        np.diff(peaks) / fs
+        np.diff(
+            peaks
+        )
+        /
+        fs
     )
 
 
-    median_interval = np.median(
+    print(
+        "Pulse intervals:"
+    )
+
+    print(
         intervals
     )
 
+    print()
 
-    if median_interval > 0:
 
-        heart_rate = (
-            60.0 /
-            median_interval
+    # --------------------------------------------------------
+    # 30 - 220 BPM
+    # --------------------------------------------------------
+
+    valid_intervals = intervals[
+        (
+            intervals >= (
+                60.0 / 220.0
+            )
         )
-
-
-        print(
-            "Heart Rate:",
-            round(
-                heart_rate,
-                2
-            ),
-            "BPM"
+        &
+        (
+            intervals <= (
+                60.0 / 30.0
+            )
         )
+    ]
 
-    else:
-
-        print(
-            "Invalid pulse interval."
-        )
-
-else:
 
     print(
-        "Unable to calculate Heart Rate."
+        "Valid pulse intervals:",
+        len(valid_intervals)
     )
 
+    print()
+
+
+    if len(
+        valid_intervals
+    ) > 0:
+
+        median_interval = np.median(
+            valid_intervals
+        )
+
+
+        if median_interval > 0:
+
+            calculated_hr = (
+                60.0
+                /
+                median_interval
+            )
+
+
+            if (
+                30.0
+                <=
+                calculated_hr
+                <=
+                220.0
+            ):
+
+                heart_rate = round(
+                    float(
+                        calculated_hr
+                    ),
+                    2
+                )
+
+
+# ============================================================
+# METHOD 2 - MORE RELAXED PEAK DETECTION
+# ============================================================
+
+if heart_rate is None:
+
+    print(
+        "Trying relaxed heart-rate detection..."
+    )
+
+    print()
+
+
+    relaxed_prominence = (
+        signal_std * 0.03
+    )
+
+
+    if relaxed_prominence <= 0:
+
+        relaxed_prominence = 1e-9
+
+
+    try:
+
+        relaxed_peaks, _ = find_peaks(
+
+            filtered_ir,
+
+            distance=max(
+                1,
+                int(
+                    0.27 * fs
+                )
+            ),
+
+            prominence=relaxed_prominence
+
+        )
+
+    except Exception:
+
+        relaxed_peaks = []
+
+
+    print(
+        "Relaxed peaks detected:",
+        len(relaxed_peaks)
+    )
+
+    print()
+
+
+    if len(
+        relaxed_peaks
+    ) >= 2:
+
+        relaxed_intervals = (
+            np.diff(
+                relaxed_peaks
+            )
+            /
+            fs
+        )
+
+
+        print(
+            "Relaxed pulse intervals:"
+        )
+
+        print(
+            relaxed_intervals
+        )
+
+        print()
+
+
+        relaxed_valid = (
+            relaxed_intervals[
+                (
+                    relaxed_intervals
+                    >=
+                    (
+                        60.0 / 220.0
+                    )
+                )
+                &
+                (
+                    relaxed_intervals
+                    <=
+                    (
+                        60.0 / 30.0
+                    )
+                )
+            ]
+        )
+
+
+        print(
+            "Relaxed valid intervals:",
+            len(relaxed_valid)
+        )
+
+        print()
+
+
+        if len(
+            relaxed_valid
+        ) > 0:
+
+            median_interval = np.median(
+                relaxed_valid
+            )
+
+
+            if median_interval > 0:
+
+                calculated_hr = (
+                    60.0
+                    /
+                    median_interval
+                )
+
+
+                if (
+                    30.0
+                    <=
+                    calculated_hr
+                    <=
+                    220.0
+                ):
+
+                    heart_rate = round(
+                        float(
+                            calculated_hr
+                        ),
+                        2
+                    )
+
+
+# ============================================================
+# METHOD 3 - AUTOCORRELATION
+# ============================================================
+
+if heart_rate is None:
+
+    print(
+        "Trying autocorrelation heart-rate detection..."
+    )
+
+    print()
+
+
+    signal_for_ac = (
+        filtered_ir
+        -
+        np.mean(
+            filtered_ir
+        )
+    )
+
+
+    signal_std_ac = np.std(
+        signal_for_ac
+    )
+
+
+    if signal_std_ac > 0:
+
+        autocorrelation = np.correlate(
+
+            signal_for_ac,
+
+            signal_for_ac,
+
+            mode="full"
+
+        )
+
+
+        autocorrelation = (
+            autocorrelation[
+                len(signal_for_ac) - 1:
+            ]
+        )
+
+
+        # ----------------------------------------------------
+        # 30-220 BPM search range
+        # ----------------------------------------------------
+
+        min_lag = max(
+            1,
+            int(
+                60.0
+                /
+                220.0
+                *
+                fs
+            )
+        )
+
+
+        max_lag = min(
+            len(
+                autocorrelation
+            ) - 1,
+            int(
+                60.0
+                /
+                30.0
+                *
+                fs
+            )
+        )
+
+
+        if max_lag > min_lag:
+
+            search_region = (
+                autocorrelation[
+                    min_lag:
+                    max_lag + 1
+                ]
+            )
+
+
+            if len(
+                search_region
+            ) > 0:
+
+                best_index = int(
+                    np.argmax(
+                        search_region
+                    )
+                )
+
+
+                best_lag = (
+                    min_lag
+                    +
+                    best_index
+                )
+
+
+                best_correlation = (
+                    search_region[
+                        best_index
+                    ]
+                )
+
+
+                zero_lag = (
+                    autocorrelation[0]
+                )
+
+
+                correlation_ratio = 0.0
+
+
+                if zero_lag != 0:
+
+                    correlation_ratio = (
+                        best_correlation
+                        /
+                        zero_lag
+                    )
+
+
+                print(
+                    "Autocorrelation lag:",
+                    best_lag
+                )
+
+                print(
+                    "Autocorrelation ratio:",
+                    round(
+                        correlation_ratio,
+                        4
+                    )
+                )
+
+                print()
+
+
+                # ------------------------------------------------
+                # Relaxed threshold
+                # ------------------------------------------------
+
+                if (
+                    best_lag > 0
+                    and
+                    correlation_ratio >= 0.07
+                ):
+
+                    estimated_hr = (
+                        60.0
+                        *
+                        fs
+                        /
+                        best_lag
+                    )
+
+
+                    if (
+                        30.0
+                        <=
+                        estimated_hr
+                        <=
+                        220.0
+                    ):
+
+                        heart_rate = round(
+                            float(
+                                estimated_hr
+                            ),
+                            2
+                        )
+
+
+# ============================================================
+# FINAL HEART RATE
+# ============================================================
+
+print(
+    "Heart Rate:",
+    heart_rate,
+    "BPM"
+)
 
 print()
 
@@ -600,7 +1353,7 @@ print()
 # ============================================================
 
 print(
-    "================================"
+    "=============================================="
 )
 
 print(
@@ -608,11 +1361,15 @@ print(
 )
 
 print(
-    "================================"
+    "=============================================="
 )
 
+print()
 
-# DC components
+
+# ============================================================
+# DC COMPONENTS
+# ============================================================
 
 dc_ir = np.mean(
     ir
@@ -623,7 +1380,9 @@ dc_red = np.mean(
 )
 
 
-# AC components
+# ============================================================
+# AC COMPONENTS
+# ============================================================
 
 ac_ir = np.std(
     filtered_ir
@@ -634,112 +1393,92 @@ ac_red = np.std(
 )
 
 
-print(
-    "DC IR :",
-    dc_ir
-)
-
-print(
-    "DC RED:",
-    dc_red
-)
-
-print(
-    "AC IR :",
-    ac_ir
-)
-
-print(
-    "AC RED:",
-    ac_red
-)
-
-
 spo2 = None
 
 
+# ============================================================
+# CALCULATE RATIO
+# ============================================================
+
 if (
-
     dc_ir > 0
-
-    and dc_red > 0
-
-    and ac_ir > 0
-
-    and ac_red > 0
-
+    and
+    dc_red > 0
+    and
+    ac_ir > 0
+    and
+    ac_red > 0
 ):
 
     ratio = (
 
-        (ac_red / dc_red)
+        (
+            ac_red
+            /
+            dc_red
+        )
 
         /
 
-        (ac_ir / dc_ir)
-
+        (
+            ac_ir
+            /
+            dc_ir
+        )
     )
 
 
-    print(
-        "R ratio:",
+    if np.isfinite(
         ratio
-    )
+    ):
 
+        spo2_value = (
 
-    # Approximate empirical equation.
-    #
-    # This is an estimation and must be
-    # validated against a reference pulse
-    # oximeter before clinical use.
+            -45.060
+            * ratio
+            * ratio
 
-    spo2_value = (
+            + 30.354
+            * ratio
 
-        -45.060 * ratio * ratio
-
-        + 30.354 * ratio
-
-        + 94.845
-
-    )
-
-
-    spo2 = float(
-
-        np.clip(
-            spo2_value,
-            70,
-            100
+            + 94.845
         )
 
-    )
+
+        if np.isfinite(
+            spo2_value
+        ):
+
+            spo2 = float(
+                np.clip(
+                    spo2_value,
+                    70.0,
+                    100.0
+                )
+            )
 
 
-    print(
-        "Estimated SpO2:",
-        round(
-            spo2,
-            2
-        ),
-        "%"
-    )
+            spo2 = round(
+                spo2,
+                2
+            )
 
-else:
 
-    print(
-        "Unable to calculate SpO2."
-    )
-
+print(
+    "SpO2:",
+    spo2,
+    "%"
+)
 
 print()
 
 
 # ============================================================
-# BLOOD PRESSURE - ML MODEL
+# BLOOD PRESSURE
 # ============================================================
 
 print(
-    "================================"
+    "=============================================="
 )
 
 print(
@@ -747,8 +1486,10 @@ print(
 )
 
 print(
-    "================================"
+    "=============================================="
 )
+
+print()
 
 
 systolic_bp = None
@@ -762,61 +1503,79 @@ try:
         "Running BP ML model..."
     )
 
+    print()
 
-    systolic_bp, diastolic_bp = predict_bp(
-        ir
+
+    systolic_bp, diastolic_bp = (
+        predict_bp(
+            ir
+        )
     )
 
 
-    systolic_bp = round(
-        float(
+    if systolic_bp is not None:
+
+        systolic_bp = float(
             systolic_bp
-        ),
-        2
-    )
+        )
 
 
-    diastolic_bp = round(
-        float(
+        if np.isfinite(
+            systolic_bp
+        ):
+
+            systolic_bp = round(
+                systolic_bp,
+                2
+            )
+
+        else:
+
+            systolic_bp = None
+
+
+    if diastolic_bp is not None:
+
+        diastolic_bp = float(
             diastolic_bp
-        ),
-        2
-    )
+        )
 
 
-    print(
-        "Estimated SBP:",
-        systolic_bp,
-        "mmHg"
-    )
+        if np.isfinite(
+            diastolic_bp
+        ):
 
+            diastolic_bp = round(
+                diastolic_bp,
+                2
+            )
 
-    print(
-        "Estimated DBP:",
-        diastolic_bp,
-        "mmHg"
-    )
+        else:
+
+            diastolic_bp = None
 
 
 except Exception as error:
 
-    print()
-
     print(
-        "BP calculation failed."
+        "BP calculation failed:"
     )
 
     print(
-        "Error:",
         str(error)
     )
 
+    print()
 
-print()
+    print(
+        "Continuing with other vital signs."
+    )
+
+    print()
 
 
 # ============================================================
-# CREATE FINAL VITALS
+# CREATE FINAL RESULT
 # ============================================================
 
 vitals = {
@@ -824,59 +1583,25 @@ vitals = {
     "patient_id":
         patient_id,
 
+    "temperature":
+        temperature,
+
     "heart_rate":
-        (
-            round(
-                float(
-                    heart_rate
-                ),
-                2
-            )
-
-            if heart_rate is not None
-
-            else None
-        ),
+        heart_rate,
 
     "spo2":
-        (
-            round(
-                float(
-                    spo2
-                ),
-                2
-            )
-
-            if spo2 is not None
-
-            else None
-        ),
+        spo2,
 
     "systolic_bp":
-        (
-            systolic_bp
-
-            if systolic_bp is not None
-
-            else None
-        ),
+        systolic_bp,
 
     "diastolic_bp":
-        (
-            diastolic_bp
-
-            if diastolic_bp is not None
-
-            else None
-        ),
-
-    "temperature":
-        None
+        diastolic_bp
 }
 
 
 # ============================================================
-# CREATE DATA DIRECTORY
+# SAVE RESULT
 # ============================================================
 
 os.makedirs(
@@ -885,29 +1610,93 @@ os.makedirs(
 )
 
 
-# ============================================================
-# SAVE VITALS JSON
-# ============================================================
+try:
 
-with open(
-    OUTPUT_FILE,
-    "w",
-    encoding="utf-8"
-) as file:
+    with open(
+        OUTPUT_FILE,
+        "w",
+        encoding="utf-8"
+    ) as file:
 
-    json.dump(
-        vitals,
-        file,
-        indent=4
+        json.dump(
+            vitals,
+            file,
+            indent=4
+        )
+
+        file.flush()
+
+except Exception as error:
+
+    fail(
+        "Could not save vitals_result.json:\n"
+        + str(error)
     )
 
 
 # ============================================================
-# DISPLAY FINAL RESULT
+# VERIFY RESULT
 # ============================================================
 
+try:
+
+    with open(
+        OUTPUT_FILE,
+        "r",
+        encoding="utf-8"
+    ) as file:
+
+        saved_vitals = json.load(
+            file
+        )
+
+except Exception as error:
+
+    fail(
+        "Could not verify vitals_result.json:\n"
+        + str(error)
+    )
+
+
+# ============================================================
+# VERIFY PATIENT ID
+# ============================================================
+
+try:
+
+    saved_patient_id = int(
+        saved_vitals.get(
+            "patient_id"
+        )
+    )
+
+except (
+    ValueError,
+    TypeError
+):
+
+    fail(
+        "Invalid patient_id in final result."
+    )
+
+
+if saved_patient_id != patient_id:
+
+    fail(
+        "Final result patient ID mismatch.\n"
+        f"Expected: {patient_id}\n"
+        f"Saved: {saved_patient_id}"
+    )
+
+
+# ============================================================
+# FINAL VITALS
+# ============================================================
+
+print()
+
 print(
-    "================================"
+    "=============================================="
 )
 
 print(
@@ -915,19 +1704,66 @@ print(
 )
 
 print(
-    "================================"
+    "=============================================="
 )
 
 print()
 
-
 print(
-    json.dumps(
-        vitals,
-        indent=4
+    "Patient ID:",
+    saved_vitals.get(
+        "patient_id"
     )
 )
 
+print(
+    "Temperature:",
+    saved_vitals.get(
+        "temperature"
+    ),
+    "°C"
+)
+
+print(
+    "Heart Rate:",
+    saved_vitals.get(
+        "heart_rate"
+    ),
+    "BPM"
+)
+
+print(
+    "SpO2:",
+    saved_vitals.get(
+        "spo2"
+    ),
+    "%"
+)
+
+print(
+    "Blood Pressure:",
+    saved_vitals.get(
+        "systolic_bp"
+    ),
+    "/",
+    saved_vitals.get(
+        "diastolic_bp"
+    ),
+    "mmHg"
+)
+
+print()
+
+print(
+    "Complete JSON:"
+)
+
+print(
+    json.dumps(
+        saved_vitals,
+        indent=4
+    )
+)
 
 print()
 
@@ -939,11 +1775,10 @@ print(
     OUTPUT_FILE
 )
 
-
 print()
 
 print(
-    "================================"
+    "=============================================="
 )
 
 print(
@@ -951,5 +1786,7 @@ print(
 )
 
 print(
-    "================================"
+    "=============================================="
 )
+
+print()

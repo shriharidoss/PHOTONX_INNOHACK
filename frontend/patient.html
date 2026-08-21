@@ -5,17 +5,14 @@
 
     <meta charset="UTF-8">
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Patient Health Kiosk</title>
 
-    <!-- =====================================================
-         PEERJS FOR VIDEO CALL
-    ====================================================== -->
-
     <script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
-
 
     <style>
 
@@ -26,11 +23,7 @@
         body {
             margin: 0;
             font-family: Arial, sans-serif;
-            background: linear-gradient(
-                135deg,
-                #e8f7ff,
-                #f1fff7
-            );
+            background: linear-gradient(135deg, #e8f7ff, #f1fff7);
             color: #16324f;
         }
 
@@ -85,10 +78,7 @@
 
         .form-grid {
             display: grid;
-            grid-template-columns: repeat(
-                2,
-                1fr
-            );
+            grid-template-columns: repeat(2, 1fr);
             gap: 18px;
         }
 
@@ -133,10 +123,7 @@
 
         .profile-grid {
             display: grid;
-            grid-template-columns: repeat(
-                5,
-                1fr
-            );
+            grid-template-columns: repeat(5, 1fr);
             gap: 15px;
         }
 
@@ -166,12 +153,7 @@
             font-size: 21px;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 5px 15px rgba(
-                22,
-                163,
-                74,
-                0.25
-            );
+            box-shadow: 0 5px 15px rgba(22, 163, 74, 0.25);
         }
 
         .health-button:hover {
@@ -214,12 +196,14 @@
             color: #92400e;
         }
 
+        .sensor-indicator.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
         .vitals-grid {
             display: grid;
-            grid-template-columns: repeat(
-                4,
-                1fr
-            );
+            grid-template-columns: repeat(4, 1fr);
             gap: 18px;
         }
 
@@ -348,10 +332,135 @@
             background: #4f46e5;
         }
 
+        .check-result-button:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
 
         /* =====================================================
-           VIDEO CALL STYLES
+           PRESCRIPTION
         ====================================================== */
+
+        .prescription-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .prescription-header h2 {
+            margin-bottom: 0;
+        }
+
+        .refresh-prescription-button {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 9px;
+            background: #0ea5e9;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .refresh-prescription-button:hover {
+            background: #0284c7;
+        }
+
+        .refresh-prescription-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .prescription-status {
+            padding: 13px;
+            border-radius: 10px;
+            background: #f1f5f9;
+            color: #475569;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .prescription-status.success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .prescription-status.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .prescription-list {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .prescription-card {
+            background: #f8fafc;
+            border: 1px solid #dbeafe;
+            border-left: 6px solid #0ea5e9;
+            border-radius: 14px;
+            padding: 20px;
+        }
+
+        .prescription-card h3 {
+            margin: 0 0 15px 0;
+            color: #0f766e;
+            font-size: 20px;
+        }
+
+        .prescription-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .prescription-item {
+            background: white;
+            border-radius: 9px;
+            padding: 12px;
+        }
+
+        .prescription-item small {
+            display: block;
+            color: #64748b;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+
+        .prescription-item strong {
+            color: #16324f;
+            font-size: 15px;
+        }
+
+        .prescription-instructions {
+            margin-top: 12px;
+            background: white;
+            border-radius: 9px;
+            padding: 13px;
+        }
+
+        .prescription-instructions small {
+            display: block;
+            color: #64748b;
+            margin-bottom: 5px;
+        }
+
+        .prescription-instructions p {
+            margin: 0;
+            color: #16324f;
+        }
+
+        .no-prescription {
+            padding: 30px;
+            text-align: center;
+            color: #64748b;
+            background: #f8fafc;
+            border-radius: 12px;
+        }
 
         .video-call-card {
             display: block;
@@ -456,36 +565,32 @@
             margin-top: 15px;
         }
 
-
         footer {
             text-align: center;
             padding: 25px;
             color: #64748b;
         }
 
-        @media (
-            max-width: 900px
-        ) {
+        @media (max-width: 900px) {
 
             .profile-grid {
-                grid-template-columns:
-                    repeat(2, 1fr);
+                grid-template-columns: repeat(2, 1fr);
             }
 
             .vitals-grid {
-                grid-template-columns:
-                    repeat(2, 1fr);
+                grid-template-columns: repeat(2, 1fr);
             }
 
             .video-container {
                 grid-template-columns: 1fr;
             }
 
+            .prescription-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
-        @media (
-            max-width: 650px
-        ) {
+        @media (max-width: 650px) {
 
             header {
                 padding: 18px;
@@ -507,6 +612,11 @@
                 grid-template-columns: 1fr;
             }
 
+            .prescription-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
         }
 
     </style>
@@ -516,10 +626,6 @@
 
 <body>
 
-
-<!-- =====================================================
-     HEADER
-===================================================== -->
 
 <header>
 
@@ -531,13 +637,9 @@
 
         <div>
 
-            <h1>
-                Rural Health Kiosk
-            </h1>
+            <h1>Rural Health Kiosk</h1>
 
-            <p>
-                Patient Health Check
-            </p>
+            <p>Patient Health Check</p>
 
         </div>
 
@@ -546,23 +648,16 @@
 </header>
 
 
-<!-- =====================================================
-     MAIN
-===================================================== -->
-
 <div class="container">
 
 
-    <!-- =================================================
+    <!-- =====================================================
          REGISTRATION
-    ================================================== -->
+    ====================================================== -->
 
     <div class="card">
 
-        <h2>
-            👤 Patient Registration
-        </h2>
-
+        <h2>👤 Patient Registration</h2>
 
         <form
             id="registrationForm"
@@ -571,12 +666,9 @@
 
             <div class="form-grid">
 
-
                 <div class="form-group">
 
-                    <label>
-                        Patient Name
-                    </label>
+                    <label>Patient Name</label>
 
                     <input
                         type="text"
@@ -590,9 +682,7 @@
 
                 <div class="form-group">
 
-                    <label>
-                        Age
-                    </label>
+                    <label>Age</label>
 
                     <input
                         type="number"
@@ -608,9 +698,7 @@
 
                 <div class="form-group">
 
-                    <label>
-                        Gender
-                    </label>
+                    <label>Gender</label>
 
                     <select
                         id="patientGender"
@@ -640,9 +728,7 @@
 
                 <div class="form-group">
 
-                    <label>
-                        Phone
-                    </label>
+                    <label>Phone</label>
 
                     <input
                         type="tel"
@@ -652,7 +738,6 @@
                     >
 
                 </div>
-
 
             </div>
 
@@ -664,7 +749,6 @@
             >
                 Register Patient
             </button>
-
 
         </form>
 
@@ -684,9 +768,9 @@
 
 
 
-    <!-- =================================================
+    <!-- =====================================================
          PATIENT PROFILE
-    ================================================== -->
+    ====================================================== -->
 
     <div
         class="card"
@@ -694,88 +778,34 @@
         style="display:none;"
     >
 
-        <h2>
-            👤 Patient Profile
-        </h2>
-
+        <h2>👤 Patient Profile</h2>
 
         <div class="profile-grid">
 
-
             <div class="profile-item">
-
-                <small>
-                    Patient ID
-                </small>
-
-                <strong
-                    id="profilePatientId"
-                >
-                    --
-                </strong>
-
+                <small>Patient ID</small>
+                <strong id="profilePatientId">--</strong>
             </div>
 
-
             <div class="profile-item">
-
-                <small>
-                    Name
-                </small>
-
-                <strong
-                    id="profileName"
-                >
-                    --
-                </strong>
-
+                <small>Name</small>
+                <strong id="profileName">--</strong>
             </div>
 
-
             <div class="profile-item">
-
-                <small>
-                    Age
-                </small>
-
-                <strong
-                    id="profileAge"
-                >
-                    --
-                </strong>
-
+                <small>Age</small>
+                <strong id="profileAge">--</strong>
             </div>
 
-
             <div class="profile-item">
-
-                <small>
-                    Gender
-                </small>
-
-                <strong
-                    id="profileGender"
-                >
-                    --
-                </strong>
-
+                <small>Gender</small>
+                <strong id="profileGender">--</strong>
             </div>
 
-
             <div class="profile-item">
-
-                <small>
-                    Phone
-                </small>
-
-                <strong
-                    id="profilePhone"
-                >
-                    --
-                </strong>
-
+                <small>Phone</small>
+                <strong id="profilePhone">--</strong>
             </div>
-
 
         </div>
 
@@ -783,16 +813,13 @@
 
 
 
-    <!-- =================================================
+    <!-- =====================================================
          HEALTH CHECK
-    ================================================== -->
+    ====================================================== -->
 
     <div class="card">
 
-        <h2>
-            🩺 Health Check
-        </h2>
-
+        <h2>🩺 Health Check</h2>
 
         <div class="patient-id-display">
 
@@ -810,40 +837,33 @@
             class="health-button"
             id="healthCheckButton"
             onclick="startHealthCheck()"
+            disabled
         >
-
             🩺 START HEALTH CHECK
-
         </button>
 
     </div>
 
 
 
-    <!-- =================================================
+    <!-- =====================================================
          MEASUREMENT
-    ================================================== -->
+    ====================================================== -->
 
     <div
         class="card measurement-section"
         id="measurementSection"
     >
 
-        <h2>
-            📡 Live Health Measurement
-        </h2>
-
+        <h2>📡 Live Health Measurement</h2>
 
         <div class="measurement-box">
-
 
             <div>
 
                 Measuring Patient:
 
-                <strong
-                    id="measurementPatientId"
-                >
+                <strong id="measurementPatientId">
                     --
                 </strong>
 
@@ -854,18 +874,12 @@
                 id="sensorIndicator"
                 class="sensor-indicator waiting"
             >
-
                 🟡 Waiting for sensor...
-
             </div>
 
 
-            <p
-                id="measurementStatus"
-            >
-
-                Starting measurement...
-
+            <p id="measurementStatus">
+                Health check has not started.
             </p>
 
 
@@ -879,13 +893,11 @@
             <button
                 type="button"
                 class="check-result-button"
+                id="checkResultButton"
                 onclick="manualCheckResult()"
             >
-
-                Check Result
-
+                🔍 CHECK RESULT
             </button>
-
 
         </div>
 
@@ -893,9 +905,9 @@
 
 
 
-    <!-- =================================================
-         VITALS RESULT
-    ================================================== -->
+    <!-- =====================================================
+         VITALS
+    ====================================================== -->
 
     <div
         class="card"
@@ -903,31 +915,21 @@
         style="display:none;"
     >
 
-        <h2>
-            ❤️ Your Health Results
-        </h2>
-
+        <h2>❤️ Your Health Results</h2>
 
         <div
             id="resultHighlight"
             class="result-highlight"
         >
-
             ✅ Your health measurement is ready!
-
         </div>
 
 
         <div class="vitals-grid">
 
-
-            <!-- TEMPERATURE -->
-
             <div class="vital-card">
 
-                <div class="vital-icon">
-                    🌡️
-                </div>
+                <div class="vital-icon">🌡️</div>
 
                 <div class="vital-name">
                     Temperature
@@ -943,13 +945,9 @@
             </div>
 
 
-            <!-- HEART RATE -->
-
             <div class="vital-card">
 
-                <div class="vital-icon">
-                    ❤️
-                </div>
+                <div class="vital-icon">❤️</div>
 
                 <div class="vital-name">
                     Heart Rate
@@ -965,13 +963,9 @@
             </div>
 
 
-            <!-- SPO2 -->
-
             <div class="vital-card">
 
-                <div class="vital-icon">
-                    🫁
-                </div>
+                <div class="vital-icon">🫁</div>
 
                 <div class="vital-name">
                     SpO₂
@@ -987,13 +981,9 @@
             </div>
 
 
-            <!-- BLOOD PRESSURE -->
-
             <div class="vital-card">
 
-                <div class="vital-icon">
-                    🩸
-                </div>
+                <div class="vital-icon">🩸</div>
 
                 <div class="vital-name">
                     Blood Pressure
@@ -1007,7 +997,6 @@
                 </div>
 
             </div>
-
 
         </div>
 
@@ -1031,37 +1020,78 @@
 
 
 
-    <!-- =================================================
+    <!-- =====================================================
+         PRESCRIPTIONS
+    ====================================================== -->
+
+    <div
+        class="card"
+        id="prescriptionSection"
+    >
+
+        <div class="prescription-header">
+
+            <h2>
+                💊 Doctor Prescriptions
+            </h2>
+
+            <button
+                type="button"
+                class="refresh-prescription-button"
+                id="refreshPrescriptionButton"
+                onclick="loadPrescriptions()"
+            >
+                🔄 Refresh
+            </button>
+
+        </div>
+
+
+        <div
+            id="prescriptionStatus"
+            class="prescription-status"
+        >
+            Select/register a patient to view prescriptions.
+        </div>
+
+
+        <div
+            id="prescriptionList"
+            class="prescription-list"
+        >
+
+            <div class="no-prescription">
+
+                No prescriptions loaded yet.
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
          VIDEO CONSULTATION
-    ================================================== -->
+    ====================================================== -->
 
     <div class="card video-call-card">
 
-        <h2>
-            📹 Video Consultation
-        </h2>
+        <h2>📹 Video Consultation</h2>
 
         <p>
             Connect with a doctor for remote medical consultation.
         </p>
 
 
-        <!-- PATIENT PEER STATUS -->
-
         <div
             id="patientPeerStatus"
             class="video-status"
         >
-
             🟡 Starting video service...
-
         </div>
 
-
-        <!-- =================================================
-             DOCTOR CONNECTION
-             The Doctor Peer ID is now fixed automatically.
-        ================================================== -->
 
         <div
             style="
@@ -1076,9 +1106,7 @@
         >
 
             👨‍⚕️ Doctor:
-            <span>
-                INNOHACK Doctor
-            </span>
+            <span>INNOHACK Doctor</span>
 
             <br>
 
@@ -1103,9 +1131,7 @@
                 id="callDoctorButton"
                 onclick="callDoctor()"
             >
-
                 📹 CALL DOCTOR
-
             </button>
 
 
@@ -1115,29 +1141,19 @@
                 id="endCallButton"
                 onclick="endPatientCall()"
             >
-
                 ☎ END CALL
-
             </button>
 
         </div>
 
 
-        <!-- VIDEO AREA -->
-
         <div class="video-container">
 
-
-            <!-- DOCTOR VIDEO -->
-
-            <div
-                class="video-box large"
-            >
+            <div class="video-box large">
 
                 <div class="video-label">
                     👨‍⚕️ Doctor
                 </div>
-
 
                 <video
                     id="patientDoctorVideo"
@@ -1148,16 +1164,11 @@
             </div>
 
 
-            <!-- PATIENT VIDEO -->
-
-            <div
-                class="video-box"
-            >
+            <div class="video-box">
 
                 <div class="video-label">
                     👤 You
                 </div>
-
 
                 <video
                     id="patientSelfVideo"
@@ -1174,19 +1185,16 @@
 
 
 
-    <!-- =================================================
+    <!-- =====================================================
          HISTORY
-    ================================================== -->
+    ====================================================== -->
 
     <div
         class="card"
         id="historySection"
     >
 
-        <h2>
-            📋 Reading History
-        </h2>
-
+        <h2>📋 Reading History</h2>
 
         <div class="history-table-wrapper">
 
@@ -1196,36 +1204,17 @@
 
                     <tr>
 
-                        <th>
-                            Date / Time
-                        </th>
-
-                        <th>
-                            Temperature
-                        </th>
-
-                        <th>
-                            Heart Rate
-                        </th>
-
-                        <th>
-                            SpO₂
-                        </th>
-
-                        <th>
-                            Blood Pressure
-                        </th>
+                        <th>Date / Time</th>
+                        <th>Temperature</th>
+                        <th>Heart Rate</th>
+                        <th>SpO₂</th>
+                        <th>Blood Pressure</th>
 
                     </tr>
 
                 </thead>
 
-
-                <tbody
-                    id="historyTable"
-                >
-
-                </tbody>
+                <tbody id="historyTable"></tbody>
 
             </table>
 
@@ -1233,13 +1222,9 @@
 
     </div>
 
-
 </div>
 
 
-<!-- =====================================================
-     FOOTER
-===================================================== -->
 
 <footer>
 
@@ -1253,34 +1238,44 @@
 
 
 
-<!-- =====================================================
-     JAVASCRIPT
-===================================================== -->
-
 <script>
 
+/* ============================================================
+   BACKEND
+============================================================ */
 
-/* =====================================================
-   FLASK API
-===================================================== */
-
-const API_BASE_URL =
-    "http://127.0.0.1:5000";
+const API_BASE_URL = "http://10.34.20.50:5000";
 
 
-/* =====================================================
+/* ============================================================
    CURRENT PATIENT
-===================================================== */
+============================================================ */
 
-let currentPatientId =
-    localStorage.getItem(
-        "patient_id"
-    );
+let currentPatientId = null;
+
+const storedPatientId =
+    localStorage.getItem("patient_id");
+
+if (storedPatientId) {
+
+    const parsed =
+        Number(storedPatientId);
+
+    if (
+        Number.isInteger(parsed) &&
+        parsed > 0
+    ) {
+
+        currentPatientId = parsed;
+    }
+}
 
 
-/* =====================================================
-   POLLING
-===================================================== */
+/* ============================================================
+   MEASUREMENT STATE
+============================================================ */
+
+let healthCheckStarted = false;
 
 let pollingTimer = null;
 
@@ -1289,58 +1284,81 @@ let pollingAttempts = 0;
 const MAX_POLLING_ATTEMPTS = 180;
 
 
-/* =====================================================
-   UPDATE CURRENT PATIENT ID ON SCREEN
-===================================================== */
+/* ============================================================
+   PRESCRIPTION REFRESH TIMER
+============================================================ */
+
+let prescriptionRefreshTimer = null;
+
+
+/* ============================================================
+   DISPLAY PATIENT ID
+============================================================ */
 
 function updatePatientIdDisplay() {
 
-    const element =
+    document.getElementById(
+        "currentPatientIdDisplay"
+    ).textContent =
+        currentPatientId || "--";
+}
+
+
+/* ============================================================
+   BUTTON STATE
+============================================================ */
+
+function updateHealthCheckButton() {
+
+    const button =
         document.getElementById(
-            "currentPatientIdDisplay"
+            "healthCheckButton"
         );
 
-
-    if (!element) {
-
+    if (!button) {
         return;
     }
 
 
-    element.textContent =
-        currentPatientId || "--";
+    if (
+        currentPatientId &&
+        Number.isInteger(
+            Number(currentPatientId)
+        ) &&
+        Number(currentPatientId) > 0
+    ) {
 
+        button.disabled = false;
+
+    } else {
+
+        button.disabled = true;
+    }
 }
 
 
-/* =====================================================
+/* ============================================================
    REGISTER PATIENT
-===================================================== */
+============================================================ */
 
-async function registerPatient(
-    event
-) {
+async function registerPatient(event) {
 
     event.preventDefault();
-
 
     const name =
         document.getElementById(
             "patientName"
         ).value.trim();
 
-
     const age =
         document.getElementById(
             "patientAge"
         ).value;
 
-
     const gender =
         document.getElementById(
             "patientGender"
         ).value;
-
 
     const phone =
         document.getElementById(
@@ -1368,12 +1386,9 @@ async function registerPatient(
             "registerButton"
         );
 
-
     button.disabled = true;
 
-    button.textContent =
-        "Saving...";
-
+    button.textContent = "Saving...";
 
     hideMessages();
 
@@ -1384,7 +1399,6 @@ async function registerPatient(
             await fetch(
                 `${API_BASE_URL}/api/patients`,
                 {
-
                     method: "POST",
 
                     headers: {
@@ -1394,26 +1408,27 @@ async function registerPatient(
 
                     body: JSON.stringify({
 
-                        name:
-                            name,
+                        name: name,
 
-                        age:
-                            Number(age),
+                        age: Number(age),
 
-                        gender:
-                            gender,
+                        gender: gender,
 
-                        phone:
-                            phone
+                        phone: phone
 
                     })
-
                 }
             );
 
 
         const result =
             await response.json();
+
+
+        console.log(
+            "REGISTER RESPONSE:",
+            result
+        );
 
 
         if (!response.ok) {
@@ -1423,46 +1438,49 @@ async function registerPatient(
                 result.error ||
                 `HTTP ${response.status}`
             );
-
         }
 
 
-        currentPatientId =
+        const newPatientId =
             Number(
                 result.patient_id
             );
 
 
         if (
-            !currentPatientId
+            !Number.isInteger(
+                newPatientId
+            ) ||
+            newPatientId <= 0
         ) {
 
             throw new Error(
-                "Flask did not return patient_id."
+                "Backend did not return a valid patient ID."
             );
-
         }
+
+
+        currentPatientId =
+            newPatientId;
 
 
         localStorage.setItem(
             "patient_id",
-            currentPatientId
+            String(newPatientId)
         );
 
+
+        resetMeasurementUI();
 
         updatePatientIdDisplay();
 
-
-        showSuccess(
-            "Patient registered successfully. Patient ID: " +
-            currentPatientId
-        );
+        updateHealthCheckButton();
 
 
         displayPatientProfile({
 
             patient_id:
-                currentPatientId,
+                newPatientId,
 
             name:
                 name,
@@ -1479,15 +1497,36 @@ async function registerPatient(
         });
 
 
+        /*
+         * Load prescriptions for the newly
+         * registered patient.
+         */
+
+        await loadPrescriptions();
+
+
+        showSuccess(
+            "Patient registered successfully. " +
+            "Patient ID: " +
+            newPatientId +
+            ". Now press START HEALTH CHECK."
+        );
+
+
         document
             .getElementById(
                 "registrationForm"
             )
             .reset();
 
-    }
 
-    catch (error) {
+        console.log(
+            "CURRENT PATIENT:",
+            currentPatientId
+        );
+
+
+    } catch (error) {
 
         console.error(
             "REGISTRATION ERROR:",
@@ -1500,27 +1539,22 @@ async function registerPatient(
             error.message
         );
 
-    }
 
-    finally {
+    } finally {
 
         button.disabled = false;
 
         button.textContent =
             "Register Patient";
-
     }
-
 }
 
 
-/* =====================================================
-   DISPLAY PATIENT PROFILE
-===================================================== */
+/* ============================================================
+   PATIENT PROFILE
+============================================================ */
 
-function displayPatientProfile(
-    patient
-) {
+function displayPatientProfile(patient) {
 
     document.getElementById(
         "profilePatientId"
@@ -1556,19 +1590,16 @@ function displayPatientProfile(
         "patientProfile"
     ).style.display =
         "block";
-
 }
 
 
-/* =====================================================
+/* ============================================================
    START HEALTH CHECK
-===================================================== */
+============================================================ */
 
 async function startHealthCheck() {
 
-    if (
-        !currentPatientId
-    ) {
+    if (!currentPatientId) {
 
         alert(
             "Please register the patient first."
@@ -1579,15 +1610,11 @@ async function startHealthCheck() {
 
 
     const patientId =
-        Number(
-            currentPatientId
-        );
+        Number(currentPatientId);
 
 
     if (
-        !Number.isInteger(
-            patientId
-        ) ||
+        !Number.isInteger(patientId) ||
         patientId <= 0
     ) {
 
@@ -1597,6 +1624,24 @@ async function startHealthCheck() {
 
         return;
     }
+
+
+    console.log(
+        "========================================"
+    );
+
+    console.log(
+        "START HEALTH CHECK BUTTON PRESSED"
+    );
+
+    console.log(
+        "PATIENT ID:",
+        patientId
+    );
+
+    console.log(
+        "========================================"
+    );
 
 
     const button =
@@ -1611,11 +1656,53 @@ async function startHealthCheck() {
         "HEALTH CHECK RUNNING";
 
 
+    healthCheckStarted = true;
+
+    stopPolling();
+
+
+    document.getElementById(
+        "measurementSection"
+    ).style.display =
+        "block";
+
+
+    document.getElementById(
+        "measurementPatientId"
+    ).textContent =
+        patientId;
+
+
+    document.getElementById(
+        "measurementStatus"
+    ).textContent =
+        "Starting sensor controller for Patient " +
+        patientId +
+        "...";
+
+
+    document.getElementById(
+        "sensorIndicator"
+    ).className =
+        "sensor-indicator waiting";
+
+
+    document.getElementById(
+        "sensorIndicator"
+    ).textContent =
+        "🟡 Starting sensor controller...";
+
+
+    document.getElementById(
+        "vitalsSection"
+    ).style.display =
+        "none";
+
+
     try {
 
         console.log(
-            "Starting health check for Patient:",
-            patientId
+            "Calling /api/measurement-session..."
         );
 
 
@@ -1623,14 +1710,11 @@ async function startHealthCheck() {
             await fetch(
                 `${API_BASE_URL}/api/measurement-session`,
                 {
-
                     method: "POST",
 
                     headers: {
-
                         "Content-Type":
                             "application/json"
-
                     },
 
                     body: JSON.stringify({
@@ -1639,7 +1723,6 @@ async function startHealthCheck() {
                             patientId
 
                     })
-
                 }
             );
 
@@ -1649,7 +1732,7 @@ async function startHealthCheck() {
 
 
         console.log(
-            "Flask measurement response:",
+            "MEASUREMENT SESSION RESPONSE:",
             result
         );
 
@@ -1661,41 +1744,40 @@ async function startHealthCheck() {
                 result.error ||
                 `HTTP ${response.status}`
             );
-
         }
 
 
-        currentPatientId =
-            Number(
-                result.patient_id
-            );
+        if (
+            result.patient_id !== undefined &&
+            result.patient_id !== null
+        ) {
+
+            const backendPatientId =
+                Number(
+                    result.patient_id
+                );
 
 
-        localStorage.setItem(
-            "patient_id",
-            currentPatientId
-        );
+            if (
+                backendPatientId !==
+                patientId
+            ) {
 
-
-        updatePatientIdDisplay();
-
-
-        document.getElementById(
-            "measurementSection"
-        ).style.display =
-            "block";
-
-
-        document.getElementById(
-            "measurementPatientId"
-        ).textContent =
-            currentPatientId;
+                throw new Error(
+                    "Patient ID mismatch.\n" +
+                    "Frontend: " +
+                    patientId +
+                    "\nBackend: " +
+                    backendPatientId
+                );
+            }
+        }
 
 
         document.getElementById(
             "measurementStatus"
         ).textContent =
-            "Sensor controller started automatically. Place your finger on MAX30102.";
+            "Sensor controller started. Place your finger on the MAX30102 and keep it still.";
 
 
         document.getElementById(
@@ -1707,96 +1789,101 @@ async function startHealthCheck() {
         document.getElementById(
             "sensorIndicator"
         ).textContent =
-            "🟢 Sensor active — keep your finger still.";
-
-
-        document.getElementById(
-            "vitalsSection"
-        ).style.display =
-            "none";
-
-
-        document.getElementById(
-            "resultHighlight"
-        ).style.display =
-            "none";
-
-
-        document.getElementById(
-            "measurementSection"
-        ).scrollIntoView({
-
-            behavior:
-                "smooth"
-
-        });
+            "🟢 Sensor controller running — waiting for finger.";
 
 
         startResultPolling();
 
-    }
 
-    catch (error) {
+    } catch (error) {
 
         console.error(
-            "HEALTH CHECK ERROR:",
+            "FAILED TO START SENSOR CONTROLLER:",
             error
         );
 
 
-        alert(
-            "Unable to start health check.\n\n" +
-            error.message
-        );
+        healthCheckStarted = false;
+
+
+        document.getElementById(
+            "measurementStatus"
+        ).textContent =
+            "❌ Could not start sensor controller: " +
+            error.message;
+
+
+        document.getElementById(
+            "sensorIndicator"
+        ).className =
+            "sensor-indicator error";
+
+
+        document.getElementById(
+            "sensorIndicator"
+        ).textContent =
+            "❌ Sensor controller failed to start.";
 
 
         button.disabled = false;
 
         button.textContent =
             "🩺 START HEALTH CHECK";
-
     }
-
 }
 
 
-/* =====================================================
-   START RESULT POLLING
-===================================================== */
+/* ============================================================
+   START STATUS POLLING
+============================================================ */
 
 function startResultPolling() {
 
-    if (
-        pollingTimer
-    ) {
+    stopPolling();
+
+    pollingAttempts = 0;
+
+    checkMeasurementStatus();
+
+
+    pollingTimer =
+        setInterval(
+            checkMeasurementStatus,
+            2000
+        );
+}
+
+
+/* ============================================================
+   STOP STATUS POLLING
+============================================================ */
+
+function stopPolling() {
+
+    if (pollingTimer !== null) {
 
         clearInterval(
             pollingTimer
         );
 
+        pollingTimer = null;
     }
-
-
-    pollingAttempts = 0;
-
-
-    checkMeasurementResult();
-
-
-    pollingTimer =
-        setInterval(
-            checkMeasurementResult,
-            2000
-        );
-
 }
 
 
-/* =====================================================
+/* ============================================================
    CHECK MEASUREMENT STATUS
-===================================================== */
+============================================================ */
 
-async function checkMeasurementResult() {
+async function checkMeasurementStatus() {
+
+    if (!healthCheckStarted) {
+        return;
+    }
+
+
+    pollingAttempts++;
+
 
     try {
 
@@ -1804,30 +1891,46 @@ async function checkMeasurementResult() {
             await fetch(
                 `${API_BASE_URL}/api/measurement-status`,
                 {
+                    method: "GET",
 
-                    cache:
-                        "no-store"
-
+                    cache: "no-store"
                 }
             );
 
 
-        const status =
+        if (!response.ok) {
+
+            throw new Error(
+                `HTTP ${response.status}`
+            );
+        }
+
+
+        const data =
             await response.json();
 
 
         console.log(
-            "Measurement status:",
-            status
+            "MEASUREMENT STATUS:",
+            data
         );
 
 
-        pollingAttempts++;
+        const rawStatus =
+            String(
+                data.measurement ??
+                data.status ??
+                data.state ??
+                ""
+            ).toLowerCase();
 
 
         if (
-            status.measurement ===
-            "in_progress"
+            rawStatus === "in_progress" ||
+            rawStatus === "running" ||
+            rawStatus === "started" ||
+            rawStatus === "collecting" ||
+            rawStatus === "waiting"
         ) {
 
             document.getElementById(
@@ -1848,64 +1951,57 @@ async function checkMeasurementResult() {
                 "🟢 Collecting sensor data...";
 
 
-            if (
-                pollingAttempts >=
-                MAX_POLLING_ATTEMPTS
-            ) {
-
-                stopPolling();
-
-                showMeasurementTimeout();
-
-            }
-
-
             return;
-
         }
 
 
         if (
-            status.measurement ===
-            "complete"
+            rawStatus === "complete" ||
+            rawStatus === "completed" ||
+            rawStatus === "success" ||
+            rawStatus === "finished"
         ) {
 
             stopPolling();
 
-            await showCompletedMeasurement();
+            await measurementComplete();
 
             return;
-
         }
 
 
         if (
-            status.measurement ===
-            "failed"
+            rawStatus === "failed" ||
+            rawStatus === "error" ||
+            rawStatus === "aborted"
         ) {
 
             stopPolling();
 
-            showMeasurementFailed(
-                status.return_code
+            measurementFailed(
+                data.return_code
             );
 
             return;
-
         }
 
 
-        if (
-            status.measurement ===
-            "not_running"
-        ) {
+        document.getElementById(
+            "measurementStatus"
+        ).textContent =
+            "⏳ Waiting for sensor controller...";
 
-            document.getElementById(
-                "measurementStatus"
-            ).textContent =
-                "Starting sensor measurement...";
 
-        }
+        document.getElementById(
+            "sensorIndicator"
+        ).className =
+            "sensor-indicator waiting";
+
+
+        document.getElementById(
+            "sensorIndicator"
+        ).textContent =
+            "🟡 Sensor controller starting...";
 
 
         if (
@@ -1915,16 +2011,14 @@ async function checkMeasurementResult() {
 
             stopPolling();
 
-            showMeasurementTimeout();
-
+            measurementTimeout();
         }
 
-    }
 
-    catch (error) {
+    } catch (error) {
 
         console.error(
-            "MEASUREMENT STATUS ERROR:",
+            "STATUS ERROR:",
             error
         );
 
@@ -1936,25 +2030,24 @@ async function checkMeasurementResult() {
 
             stopPolling();
 
-            showMeasurementTimeout();
-
+            measurementTimeout();
         }
-
     }
-
 }
 
 
-/* =====================================================
+/* ============================================================
    MEASUREMENT COMPLETE
-===================================================== */
+============================================================ */
 
-async function showCompletedMeasurement() {
+async function measurementComplete() {
 
     document.getElementById(
         "measurementStatus"
     ).textContent =
-        "✅ Health measurement completed.";
+        "✅ Sensor measurement completed. Loading Patient " +
+        currentPatientId +
+        " result...";
 
 
     document.getElementById(
@@ -1966,214 +2059,313 @@ async function showCompletedMeasurement() {
     document.getElementById(
         "sensorIndicator"
     ).textContent =
-        "✅ Sensor measurement complete. Loading result...";
+        "✅ Measurement complete.";
 
 
-    await new Promise(
-        function(resolve) {
-
-            setTimeout(
-                resolve,
-                1000
-            );
-
-        }
-    );
+    await sleep(1000);
 
 
     const loaded =
-        await loadMyVitals();
+        await loadResultWithRetry(
+            10,
+            1000
+        );
 
 
-    if (!loaded) {
+    if (loaded) {
+
+        document.getElementById(
+            "resultHighlight"
+        ).style.display =
+            "block";
+
+
+        document.getElementById(
+            "resultHighlight"
+        ).textContent =
+            "✅ Your health measurement is ready!";
+
 
         document.getElementById(
             "measurementStatus"
         ).textContent =
-            "Measurement completed, but the database result is not available yet. Press Check Result.";
-
-        return;
-
-    }
+            "✅ Result saved and loaded successfully for Patient " +
+            currentPatientId +
+            ".";
 
 
-    document.getElementById(
-        "resultHighlight"
-    ).style.display =
-        "block";
-
-
-    document.getElementById(
-        "resultHighlight"
-    ).textContent =
-        "✅ Your health measurement is ready!";
-
-
-    document.getElementById(
-        "vitalsSection"
-    ).scrollIntoView({
-
-        behavior:
-            "smooth"
-
-    });
-
-
-    const button =
         document.getElementById(
-            "healthCheckButton"
-        );
+            "sensorIndicator"
+        ).textContent =
+            "✅ Result available.";
 
 
-    button.disabled = false;
+        healthCheckStarted = false;
 
-    button.textContent =
-        "🩺 START NEW HEALTH CHECK";
 
+        const button =
+            document.getElementById(
+                "healthCheckButton"
+            );
+
+
+        button.disabled = false;
+
+        button.textContent =
+            "🩺 START NEW HEALTH CHECK";
+
+
+        document.getElementById(
+            "vitalsSection"
+        ).scrollIntoView({
+            behavior: "smooth"
+        });
+
+
+    } else {
+
+        document.getElementById(
+            "measurementStatus"
+        ).textContent =
+            "⚠️ Measurement finished, but the database result is not available yet. Press CHECK RESULT.";
+
+
+        document.getElementById(
+            "sensorIndicator"
+        ).className =
+            "sensor-indicator waiting";
+
+
+        document.getElementById(
+            "sensorIndicator"
+        ).textContent =
+            "🟡 Waiting for saved result.";
+
+
+        healthCheckStarted = false;
+
+
+        const button =
+            document.getElementById(
+                "healthCheckButton"
+            );
+
+
+        button.disabled = false;
+
+        button.textContent =
+            "🩺 START NEW HEALTH CHECK";
+    }
 }
 
 
-/* =====================================================
+/* ============================================================
+   LOAD RESULT WITH RETRY
+============================================================ */
+
+async function loadResultWithRetry(
+    attempts,
+    delay
+) {
+
+    for (
+        let i = 0;
+        i < attempts;
+        i++
+    ) {
+
+        const loaded =
+            await loadMyVitals();
+
+
+        if (loaded) {
+
+            return true;
+        }
+
+
+        if (
+            i < attempts - 1
+        ) {
+
+            await sleep(delay);
+        }
+    }
+
+
+    return false;
+}
+
+
+/* ============================================================
    MANUAL CHECK RESULT
-===================================================== */
+============================================================ */
 
 async function manualCheckResult() {
 
-    await loadMyVitals();
+    if (!currentPatientId) {
 
-}
-
-
-/* =====================================================
-   STOP POLLING
-===================================================== */
-
-function stopPolling() {
-
-    if (
-        pollingTimer
-    ) {
-
-        clearInterval(
-            pollingTimer
+        alert(
+            "No current patient selected."
         );
 
-        pollingTimer = null;
-
+        return;
     }
 
-}
+
+    const button =
+        document.getElementById(
+            "checkResultButton"
+        );
 
 
-/* =====================================================
-   MEASUREMENT FAILED
-===================================================== */
+    button.disabled = true;
 
-function showMeasurementFailed(
-    returnCode
-) {
+    button.textContent =
+        "🔄 CHECKING...";
+
 
     document.getElementById(
         "measurementStatus"
     ).textContent =
-        "❌ Sensor measurement failed.";
+        "Checking saved result for Patient " +
+        currentPatientId +
+        "...";
 
 
-    document.getElementById(
-        "sensorIndicator"
-    ).className =
-        "sensor-indicator waiting";
+    try {
+
+        const loaded =
+            await loadResultWithRetry(
+                5,
+                1000
+            );
 
 
-    document.getElementById(
-        "sensorIndicator"
-    ).textContent =
-        "Check ESP32, USB connection and COM port.";
+        if (loaded) {
+
+            document.getElementById(
+                "resultHighlight"
+            ).style.display =
+                "block";
 
 
-    const button =
-        document.getElementById(
-            "healthCheckButton"
+            document.getElementById(
+                "resultHighlight"
+            ).textContent =
+                "✅ Your health measurement is ready!";
+
+
+            document.getElementById(
+                "measurementStatus"
+            ).textContent =
+                "✅ Result found for Patient " +
+                currentPatientId +
+                ".";
+
+
+            document.getElementById(
+                "sensorIndicator"
+            ).className =
+                "sensor-indicator active";
+
+
+            document.getElementById(
+                "sensorIndicator"
+            ).textContent =
+                "✅ Result available.";
+
+
+            document.getElementById(
+                "vitalsSection"
+            ).scrollIntoView({
+                behavior: "smooth"
+            });
+
+
+        } else {
+
+            document.getElementById(
+                "measurementStatus"
+            ).textContent =
+                "⏳ Result not ready yet for Patient " +
+                currentPatientId +
+                ". Wait for the sensor measurement to finish.";
+
+
+            document.getElementById(
+                "sensorIndicator"
+            ).className =
+                "sensor-indicator waiting";
+
+
+            document.getElementById(
+                "sensorIndicator"
+            ).textContent =
+                "🟡 Result not ready yet.";
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            "CHECK RESULT ERROR:",
+            error
         );
 
 
-    button.disabled = false;
-
-    button.textContent =
-        "🩺 START HEALTH CHECK";
-
-
-    console.error(
-        "Sensor controller return code:",
-        returnCode
-    );
-
-}
-
-
-/* =====================================================
-   TIMEOUT
-===================================================== */
-
-function showMeasurementTimeout() {
-
-    document.getElementById(
-        "measurementStatus"
-    ).textContent =
-        "⚠️ Measurement is taking too long.";
-
-
-    document.getElementById(
-        "sensorIndicator"
-    ).className =
-        "sensor-indicator waiting";
-
-
-    document.getElementById(
-        "sensorIndicator"
-    ).textContent =
-        "Check ESP32 connection and MAX30102.";
-
-
-    const button =
         document.getElementById(
-            "healthCheckButton"
-        );
+            "measurementStatus"
+        ).textContent =
+            "❌ Could not check result.";
 
 
-    button.disabled = false;
+        document.getElementById(
+            "sensorIndicator"
+        ).className =
+            "sensor-indicator error";
 
-    button.textContent =
-        "🩺 START HEALTH CHECK";
 
+        document.getElementById(
+            "sensorIndicator"
+        ).textContent =
+            "❌ Database/backend error.";
+    }
+
+
+    finally {
+
+        button.disabled = false;
+
+        button.textContent =
+            "🔍 CHECK RESULT";
+    }
 }
 
 
-/* =====================================================
-   LOAD PATIENT VITALS
-===================================================== */
+/* ============================================================
+   LOAD VITALS
+============================================================ */
 
 async function loadMyVitals() {
 
-    if (
-        !currentPatientId
-    ) {
-
+    if (!currentPatientId) {
         return false;
-
     }
+
+
+    const patientId =
+        Number(currentPatientId);
 
 
     try {
 
         const response =
             await fetch(
-                `${API_BASE_URL}/api/vitals/${encodeURIComponent(currentPatientId)}`,
+                `${API_BASE_URL}/api/vitals/${encodeURIComponent(patientId)}`,
                 {
-
-                    cache:
-                        "no-store"
-
+                    method: "GET",
+                    cache: "no-store"
                 }
             );
 
@@ -2183,28 +2375,47 @@ async function loadMyVitals() {
 
 
         console.log(
-            "Patient vitals:",
+            "VITALS RESPONSE:",
             result
         );
 
 
-        if (
-            !response.ok
-        ) {
+        if (!response.ok) {
 
             return false;
-
         }
 
 
-        const readings =
-            Array.isArray(
-                result.readings
-            )
+        let readings = [];
 
-                ? result.readings
 
-                : [];
+        if (
+            Array.isArray(result.readings)
+        ) {
+
+            readings =
+                result.readings;
+
+        } else if (
+            Array.isArray(result.data)
+        ) {
+
+            readings =
+                result.data;
+
+        } else if (
+            Array.isArray(result.vitals)
+        ) {
+
+            readings =
+                result.vitals;
+
+        } else if (
+            result.temperature !== undefined
+        ) {
+
+            readings = [result];
+        }
 
 
         if (
@@ -2212,20 +2423,54 @@ async function loadMyVitals() {
         ) {
 
             return false;
+        }
 
+
+        const matching =
+            readings.filter(
+                function(reading) {
+
+                    if (
+                        reading.patient_id ===
+                        undefined ||
+                        reading.patient_id ===
+                        null
+                    ) {
+
+                        return true;
+                    }
+
+
+                    return (
+                        Number(
+                            reading.patient_id
+                        ) === patientId
+                    );
+                }
+            );
+
+
+        if (
+            matching.length === 0
+        ) {
+
+            console.error(
+                "VITAL PATIENT MISMATCH"
+            );
+
+            return false;
         }
 
 
         const latest =
             getLatestReading(
-                readings
+                matching
             );
 
 
         if (!latest) {
 
             return false;
-
         }
 
 
@@ -2241,138 +2486,59 @@ async function loadMyVitals() {
 
 
         displayHistory(
-            readings
+            matching
         );
 
 
         return true;
 
-    }
 
-    catch (error) {
+    } catch (error) {
 
         console.error(
-            "VITALS ERROR:",
+            "LOAD VITALS ERROR:",
             error
         );
 
         return false;
-
     }
-
 }
 
 
-/* =====================================================
+/* ============================================================
    GET LATEST READING
-===================================================== */
+============================================================ */
 
 function getLatestReading(
     readings
 ) {
 
-    if (
-        !readings.length
-    ) {
+    return [...readings].sort(
+        function(a, b) {
 
-        return null;
-
-    }
-
-
-    const timestampFields = [
-
-        "reading_time",
-
-        "created_at",
-
-        "timestamp",
-
-        "date"
-
-    ];
-
-
-    let hasTimestamp = false;
-
-
-    for (
-        const reading of readings
-    ) {
-
-        for (
-            const field of timestampFields
-        ) {
-
-            if (
-                reading[field] != null
-            ) {
-
-                hasTimestamp = true;
-
-                break;
-
-            }
+            return (
+                getReadingTime(b) -
+                getReadingTime(a)
+            );
 
         }
-
-
-        if (
-            hasTimestamp
-        ) {
-
-            break;
-
-        }
-
-    }
-
-
-    if (
-        hasTimestamp
-    ) {
-
-        return [...readings].sort(
-
-            function(a, b) {
-
-                return (
-                    getReadingTime(b) -
-                    getReadingTime(a)
-                );
-
-            }
-
-        )[0];
-
-    }
-
-
-    return readings[
-        readings.length - 1
-    ];
-
+    )[0] || null;
 }
 
 
-/* =====================================================
+/* ============================================================
    READING TIME
-===================================================== */
+============================================================ */
 
 function getReadingTime(
     reading
 ) {
 
     const fields = [
-
         "reading_time",
-
         "created_at",
-
         "timestamp",
-
         "date"
-
     ];
 
 
@@ -2391,89 +2557,78 @@ function getReadingTime(
 
 
             if (
-                !Number.isNaN(
-                    time
-                )
+                !Number.isNaN(time)
             ) {
 
                 return time;
-
             }
-
         }
-
     }
 
 
     return 0;
-
 }
 
 
-/* =====================================================
-   DISPLAY LATEST VITALS
-===================================================== */
+/* ============================================================
+   DISPLAY VITALS
+============================================================ */
 
 function displayLatestVitals(
     reading
 ) {
 
-    if (!reading) {
+    const temperature =
+        reading.temperature;
 
-        return;
 
-    }
+    const heartRate =
+        reading.heart_rate;
+
+
+    const spo2 =
+        reading.spo2;
+
+
+    const systolic =
+        reading.systolic_bp;
+
+
+    const diastolic =
+        reading.diastolic_bp;
 
 
     document.getElementById(
         "temperatureValue"
     ).textContent =
-
-        reading.temperature != null
-
-            ? `${reading.temperature} °C`
-
-               : "36.7 °C"
+        temperature != null
+            ? `${temperature} °C`
+            : "-- °C";
 
 
     document.getElementById(
         "heartRateValue"
     ).textContent =
-
-        reading.heart_rate != null
-
-            ? `${Number(
-                reading.heart_rate
-            ).toFixed(2)} BPM`
-
+        heartRate != null
+            ? `${Number(heartRate).toFixed(2)} BPM`
             : "-- BPM";
 
 
     document.getElementById(
         "spo2Value"
     ).textContent =
-
-        reading.spo2 != null
-
-            ? `${Number(
-                reading.spo2
-            ).toFixed(2)} %`
-
+        spo2 != null
+            ? `${Number(spo2).toFixed(2)} %`
             : "-- %";
 
 
     document.getElementById(
         "bpValue"
     ).textContent =
+        systolic != null &&
+        diastolic != null
 
-        reading.systolic_bp != null &&
-        reading.diastolic_bp != null
-
-            ? `${Number(
-                reading.systolic_bp
-            ).toFixed(2)} / ${Number(
-                reading.diastolic_bp
-            ).toFixed(2)} mmHg`
+            ? `${Number(systolic).toFixed(2)} / ${Number(diastolic).toFixed(2)} mmHg`
 
             : "-- / -- mmHg";
 
@@ -2488,11 +2643,8 @@ function displayLatestVitals(
     document.getElementById(
         "readingTime"
     ).textContent =
-
         time
-
             ? `Latest reading: ${formatDate(time)}`
-
             : "Latest reading loaded.";
 
 
@@ -2514,13 +2666,12 @@ function displayLatestVitals(
 
     statusElement.className =
         `status ${status.className}`;
-
 }
 
 
-/* =====================================================
+/* ============================================================
    HISTORY
-===================================================== */
+============================================================ */
 
 function displayHistory(
     readings
@@ -2535,9 +2686,8 @@ function displayHistory(
     table.innerHTML = "";
 
 
-    const sorted =
-        [...readings].sort(
-
+    [...readings]
+        .sort(
             function(a, b) {
 
                 return (
@@ -2546,117 +2696,94 @@ function displayHistory(
                 );
 
             }
+        )
+        .forEach(
+            function(reading) {
 
-        );
+                const row =
+                    document.createElement(
+                        "tr"
+                    );
 
 
-    sorted.forEach(
+                const time =
+                    reading.reading_time ??
+                    reading.created_at ??
+                    reading.timestamp ??
+                    "--";
 
-        function(reading) {
 
-            const row =
-                document.createElement(
-                    "tr"
+                const temperature =
+                    reading.temperature != null
+                        ? `${reading.temperature} °C`
+                        : "--";
+
+
+                const heartRate =
+                    reading.heart_rate != null
+                        ? `${Number(reading.heart_rate).toFixed(2)} BPM`
+                        : "--";
+
+
+                const spo2 =
+                    reading.spo2 != null
+                        ? `${Number(reading.spo2).toFixed(2)} %`
+                        : "--";
+
+
+                const bp =
+                    reading.systolic_bp != null &&
+                    reading.diastolic_bp != null
+                        ? `${Number(reading.systolic_bp).toFixed(2)} / ${Number(reading.diastolic_bp).toFixed(2)} mmHg`
+                        : "-- / --";
+
+
+                row.innerHTML = `
+
+                    <td>
+                        ${escapeHtml(
+                            formatDate(time)
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(
+                            temperature
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(
+                            heartRate
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(
+                            spo2
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(
+                            bp
+                        )}
+                    </td>
+
+                `;
+
+
+                table.appendChild(
+                    row
                 );
-
-
-            const time =
-                reading.reading_time ??
-                reading.created_at ??
-                reading.timestamp ??
-                "--";
-
-
-            const temperature =
-                reading.temperature != null
-
-                    ? `${reading.temperature} °C`
-
-                    : "--";
-
-
-            const heartRate =
-                reading.heart_rate != null
-
-                    ? `${Number(
-                        reading.heart_rate
-                    ).toFixed(2)} BPM`
-
-                    : "--";
-
-
-            const spo2 =
-                reading.spo2 != null
-
-                    ? `${Number(
-                        reading.spo2
-                    ).toFixed(2)} %`
-
-                    : "--";
-
-
-            const bp =
-                reading.systolic_bp != null &&
-                reading.diastolic_bp != null
-
-                    ? `${Number(
-                        reading.systolic_bp
-                    ).toFixed(2)} / ${Number(
-                        reading.diastolic_bp
-                    ).toFixed(2)} mmHg`
-
-                    : "-- / --";
-
-
-            row.innerHTML = `
-
-                <td>
-                    ${escapeHtml(
-                        formatDate(time)
-                    )}
-                </td>
-
-                <td>
-                    ${escapeHtml(
-                        temperature
-                    )}
-                </td>
-
-                <td>
-                    ${escapeHtml(
-                        heartRate
-                    )}
-                </td>
-
-                <td>
-                    ${escapeHtml(
-                        spo2
-                    )}
-                </td>
-
-                <td>
-                    ${escapeHtml(
-                        bp
-                    )}
-                </td>
-
-            `;
-
-
-            table.appendChild(
-                row
-            );
-
-        }
-
-    );
-
+            }
+        );
 }
 
 
-/* =====================================================
+/* ============================================================
    VITAL STATUS
-===================================================== */
+============================================================ */
 
 function calculateVitalStatus(
     reading
@@ -2684,17 +2811,13 @@ function calculateVitalStatus(
 
             abnormal = true;
 
-        }
-
-        else if (
+        } else if (
             hr < 60 ||
             hr > 100
         ) {
 
             attention = true;
-
         }
-
     }
 
 
@@ -2714,16 +2837,12 @@ function calculateVitalStatus(
 
             abnormal = true;
 
-        }
-
-        else if (
+        } else if (
             spo2 < 95
         ) {
 
             attention = true;
-
         }
-
     }
 
 
@@ -2753,153 +2872,198 @@ function calculateVitalStatus(
 
             abnormal = true;
 
-        }
-
-        else if (
+        } else if (
             systolic >= 140 ||
             diastolic >= 90
         ) {
 
             attention = true;
-
         }
-
     }
 
 
     if (abnormal) {
 
         return {
-
-            text:
-                "Attention Required",
-
-            className:
-                "status-abnormal"
-
+            text: "Attention Required",
+            className: "status-abnormal"
         };
-
     }
 
 
     if (attention) {
 
         return {
-
-            text:
-                "Review Recommended",
-
-            className:
-                "status-attention"
-
+            text: "Review Recommended",
+            className: "status-attention"
         };
-
     }
 
 
     return {
-
-        text:
-            "Normal",
-
-        className:
-            "status-normal"
-
+        text: "Normal",
+        className: "status-normal"
     };
-
 }
 
 
-/* =====================================================
-   LOAD EXISTING PATIENT
-===================================================== */
+/* ============================================================
+   RESET MEASUREMENT UI
+============================================================ */
 
-async function loadExistingPatient() {
+function resetMeasurementUI() {
 
-    if (
-        !currentPatientId
-    ) {
+    healthCheckStarted = false;
 
-        updatePatientIdDisplay();
-
-        return;
-
-    }
+    stopPolling();
 
 
-    updatePatientIdDisplay();
+    document.getElementById(
+        "measurementSection"
+    ).style.display =
+        "none";
 
 
-    try {
-
-        const response =
-            await fetch(
-                `${API_BASE_URL}/api/patients/${encodeURIComponent(currentPatientId)}`,
-                {
-
-                    cache:
-                        "no-store"
-
-                }
-            );
+    document.getElementById(
+        "vitalsSection"
+    ).style.display =
+        "none";
 
 
-        if (
-            !response.ok
-        ) {
-
-            return;
-
-        }
+    document.getElementById(
+        "resultHighlight"
+    ).style.display =
+        "none";
 
 
-        const result =
-            await response.json();
+    document.getElementById(
+        "sensorIndicator"
+    ).className =
+        "sensor-indicator waiting";
 
 
-        console.log(
-            "Existing patient:",
-            result
-        );
+    document.getElementById(
+        "sensorIndicator"
+    ).textContent =
+        "🟡 Waiting for health check...";
 
 
-        const patient =
-            result.patient ||
-            result.data ||
-            null;
+    document.getElementById(
+        "measurementStatus"
+    ).textContent =
+        "Health check has not started.";
 
 
-        if (!patient) {
-
-            return;
-
-        }
-
-
-        displayPatientProfile(
-            patient
-        );
+    document.getElementById(
+        "measurementPatientId"
+    ).textContent =
+        currentPatientId || "--";
 
 
-        await loadMyVitals();
+    document.getElementById(
+        "healthCheckButton"
+    ).disabled =
+        !currentPatientId;
 
-    }
 
-    catch (error) {
-
-        console.error(
-            "LOAD PATIENT ERROR:",
-            error
-        );
-
-    }
-
+    document.getElementById(
+        "healthCheckButton"
+    ).textContent =
+        "🩺 START HEALTH CHECK";
 }
 
 
-/* =====================================================
-   SUCCESS MESSAGE
-===================================================== */
+/* ============================================================
+   TIMEOUT
+============================================================ */
+
+function measurementTimeout() {
+
+    healthCheckStarted = false;
+
+
+    document.getElementById(
+        "measurementStatus"
+    ).textContent =
+        "❌ Sensor measurement timed out. Check ESP32, USB and COM15.";
+
+
+    document.getElementById(
+        "sensorIndicator"
+    ).className =
+        "sensor-indicator error";
+
+
+    document.getElementById(
+        "sensorIndicator"
+    ).textContent =
+        "❌ Sensor timeout.";
+
+
+    const button =
+        document.getElementById(
+            "healthCheckButton"
+        );
+
+
+    button.disabled = false;
+
+    button.textContent =
+        "🩺 START HEALTH CHECK";
+}
+
+
+/* ============================================================
+   SENSOR FAILURE
+============================================================ */
+
+function measurementFailed(
+    returnCode
+) {
+
+    healthCheckStarted = false;
+
+
+    document.getElementById(
+        "measurementStatus"
+    ).textContent =
+        "❌ Sensor measurement failed. Check ESP32 and COM15.";
+
+
+    document.getElementById(
+        "sensorIndicator"
+    ).className =
+        "sensor-indicator error";
+
+
+    document.getElementById(
+        "sensorIndicator"
+    ).textContent =
+        "❌ Sensor measurement failed.";
+
+
+    console.error(
+        "SENSOR CONTROLLER RETURN CODE:",
+        returnCode
+    );
+
+
+    const button =
+        document.getElementById(
+            "healthCheckButton"
+        );
+
+
+    button.disabled = false;
+
+    button.textContent =
+        "🩺 START HEALTH CHECK";
+}
+
+
+/* ============================================================
+   MESSAGES
+============================================================ */
 
 function showSuccess(
     message
@@ -2917,13 +3081,8 @@ function showSuccess(
 
     element.style.display =
         "block";
-
 }
 
-
-/* =====================================================
-   ERROR MESSAGE
-===================================================== */
 
 function showError(
     message
@@ -2941,13 +3100,8 @@ function showError(
 
     element.style.display =
         "block";
-
 }
 
-
-/* =====================================================
-   HIDE MESSAGES
-===================================================== */
 
 function hideMessages() {
 
@@ -2961,13 +3115,669 @@ function hideMessages() {
         "errorMessage"
     ).style.display =
         "none";
-
 }
 
 
-/* =====================================================
-   DATE FORMAT
-===================================================== */
+/* ============================================================
+   EXISTING PATIENT
+============================================================ */
+
+async function loadExistingPatient() {
+
+    updatePatientIdDisplay();
+
+    updateHealthCheckButton();
+
+
+    if (!currentPatientId) {
+
+        /*
+         * Still show prescription section,
+         * but there is no patient to query yet.
+         */
+
+        updatePrescriptionStatus(
+            "🟡 Register or select a patient to view prescriptions."
+        );
+
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_BASE_URL}/api/patients/${encodeURIComponent(currentPatientId)}`,
+                {
+                    cache: "no-store"
+                }
+            );
+
+
+        if (!response.ok) {
+
+            return;
+        }
+
+
+        const result =
+            await response.json();
+
+
+        const patient =
+            result.patient ||
+            result.data ||
+            result;
+
+
+        if (patient) {
+
+            if (
+                !patient.patient_id &&
+                patient.id
+            ) {
+
+                patient.patient_id =
+                    patient.id;
+            }
+
+
+            displayPatientProfile(
+                patient
+            );
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            "LOAD PATIENT ERROR:",
+            error
+        );
+    }
+
+
+    /*
+     * Load prescriptions for the
+     * existing patient.
+     */
+
+    await loadPrescriptions();
+}
+
+
+/* ============================================================
+   PRESCRIPTION STATUS
+============================================================ */
+
+function updatePrescriptionStatus(
+    message,
+    type = ""
+) {
+
+    const element =
+        document.getElementById(
+            "prescriptionStatus"
+        );
+
+
+    if (!element) {
+        return;
+    }
+
+
+    element.textContent =
+        message;
+
+
+    element.className =
+        "prescription-status";
+
+
+    if (
+        type === "success"
+    ) {
+
+        element.classList.add(
+            "success"
+        );
+    }
+
+
+    if (
+        type === "error"
+    ) {
+
+        element.classList.add(
+            "error"
+        );
+    }
+}
+
+
+/* ============================================================
+   LOAD PRESCRIPTIONS
+============================================================ */
+
+async function loadPrescriptions() {
+
+    const list =
+        document.getElementById(
+            "prescriptionList"
+        );
+
+
+    const button =
+        document.getElementById(
+            "refreshPrescriptionButton"
+        );
+
+
+    if (!currentPatientId) {
+
+        updatePrescriptionStatus(
+            "🟡 No patient selected. Register the patient first."
+        );
+
+
+        list.innerHTML = `
+
+            <div class="no-prescription">
+
+                No patient selected.
+
+            </div>
+
+        `;
+
+
+        return;
+    }
+
+
+    const patientId =
+        Number(currentPatientId);
+
+
+    if (
+        !Number.isInteger(patientId) ||
+        patientId <= 0
+    ) {
+
+        updatePrescriptionStatus(
+            "❌ Invalid patient ID.",
+            "error"
+        );
+
+
+        return;
+    }
+
+
+    if (button) {
+
+        button.disabled = true;
+
+        button.textContent =
+            "🔄 Loading...";
+    }
+
+
+    updatePrescriptionStatus(
+        "🟡 Loading prescriptions for Patient " +
+        patientId +
+        "..."
+    );
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_BASE_URL}/api/prescriptions/${encodeURIComponent(patientId)}`,
+                {
+                    method: "GET",
+                    cache: "no-store"
+                }
+            );
+
+
+        const result =
+            await response.json();
+
+
+        console.log(
+            "PRESCRIPTION RESPONSE:",
+            result
+        );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                result.message ||
+                result.error ||
+                `HTTP ${response.status}`
+            );
+        }
+
+
+        /*
+         * Your Flask prescription route returns:
+         *
+         * {
+         *   success: true,
+         *   patient_id: 1,
+         *   prescriptions: [...]
+         * }
+         */
+
+        let prescriptions = [];
+
+
+        if (
+            Array.isArray(
+                result.prescriptions
+            )
+        ) {
+
+            prescriptions =
+                result.prescriptions;
+
+        } else if (
+            Array.isArray(
+                result.data
+            )
+        ) {
+
+            prescriptions =
+                result.data;
+
+        } else if (
+            Array.isArray(
+                result
+            )
+        ) {
+
+            prescriptions =
+                result;
+        }
+
+
+        /*
+         * Make sure the response belongs
+         * to the current patient.
+         */
+
+        if (
+            result.patient_id !== undefined &&
+            result.patient_id !== null
+        ) {
+
+            const responsePatientId =
+                Number(
+                    result.patient_id
+                );
+
+
+            if (
+                responsePatientId !==
+                patientId
+            ) {
+
+                throw new Error(
+                    "Prescription patient ID mismatch."
+                );
+            }
+        }
+
+
+        if (
+            prescriptions.length === 0
+        ) {
+
+            list.innerHTML = `
+
+                <div class="no-prescription">
+
+                    💊 No prescriptions have been issued
+                    by the doctor yet.
+
+                    <br><br>
+
+                    Prescriptions saved by the doctor
+                    will appear here.
+
+                </div>
+
+            `;
+
+
+            updatePrescriptionStatus(
+                "No prescriptions found for Patient " +
+                patientId +
+                "."
+            );
+
+
+            return;
+        }
+
+
+        displayPrescriptions(
+            prescriptions
+        );
+
+
+        updatePrescriptionStatus(
+            "✅ " +
+            prescriptions.length +
+            " prescription" +
+            (
+                prescriptions.length === 1
+                    ? ""
+                    : "s"
+            ) +
+            " found for Patient " +
+            patientId +
+            ".",
+            "success"
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "LOAD PRESCRIPTIONS ERROR:",
+            error
+        );
+
+
+        list.innerHTML = `
+
+            <div class="no-prescription">
+
+                ❌ Unable to load prescriptions.
+
+                <br><br>
+
+                Please check that the Flask backend
+                is running.
+
+            </div>
+
+        `;
+
+
+        updatePrescriptionStatus(
+            "❌ Prescription loading failed: " +
+            error.message,
+            "error"
+        );
+
+
+    } finally {
+
+        if (button) {
+
+            button.disabled = false;
+
+            button.textContent =
+                "🔄 Refresh";
+        }
+    }
+}
+
+
+/* ============================================================
+   DISPLAY PRESCRIPTIONS
+============================================================ */
+
+function displayPrescriptions(
+    prescriptions
+) {
+
+    const list =
+        document.getElementById(
+            "prescriptionList"
+        );
+
+
+    list.innerHTML = "";
+
+
+    prescriptions.forEach(
+        function(prescription, index) {
+
+            const card =
+                document.createElement(
+                    "div"
+                );
+
+
+            card.className =
+                "prescription-card";
+
+
+            const medicine =
+                prescription.medicine ??
+                "--";
+
+
+            const dosage =
+                prescription.dosage ??
+                "--";
+
+
+            const frequency =
+                prescription.frequency ??
+                "--";
+
+
+            const duration =
+                prescription.duration ??
+                "--";
+
+
+            const instructions =
+                prescription.instructions ??
+                "";
+
+
+            const doctorName =
+                prescription.doctor_name ??
+                "--";
+
+
+            const prescribedAt =
+                prescription.prescribed_at ??
+                null;
+
+
+            card.innerHTML = `
+
+                <h3>
+                    💊 Prescription ${index + 1}:
+                    ${escapeHtml(medicine)}
+                </h3>
+
+
+                <div class="prescription-grid">
+
+                    <div class="prescription-item">
+
+                        <small>
+                            Medicine
+                        </small>
+
+                        <strong>
+                            ${escapeHtml(medicine)}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="prescription-item">
+
+                        <small>
+                            Dosage
+                        </small>
+
+                        <strong>
+                            ${escapeHtml(dosage)}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="prescription-item">
+
+                        <small>
+                            Frequency
+                        </small>
+
+                        <strong>
+                            ${escapeHtml(frequency)}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="prescription-item">
+
+                        <small>
+                            Duration
+                        </small>
+
+                        <strong>
+                            ${escapeHtml(duration)}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="prescription-item">
+
+                        <small>
+                            Doctor
+                        </small>
+
+                        <strong>
+                            ${escapeHtml(doctorName)}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="prescription-item">
+
+                        <small>
+                            Prescribed At
+                        </small>
+
+                        <strong>
+                            ${
+                                prescribedAt
+                                    ? escapeHtml(
+                                        formatDate(
+                                            prescribedAt
+                                        )
+                                    )
+                                    : "--"
+                            }
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                ${
+                    instructions
+                        ? `
+                            <div class="prescription-instructions">
+
+                                <small>
+                                    Instructions
+                                </small>
+
+                                <p>
+                                    ${escapeHtml(
+                                        instructions
+                                    )}
+                                </p>
+
+                            </div>
+                        `
+                        : ""
+                }
+
+            `;
+
+
+            list.appendChild(
+                card
+            );
+        }
+    );
+}
+
+
+/* ============================================================
+   START PRESCRIPTION AUTO REFRESH
+============================================================ */
+
+function startPrescriptionAutoRefresh() {
+
+    stopPrescriptionAutoRefresh();
+
+
+    /*
+     * Check every 10 seconds.
+     *
+     * This means when the doctor saves a prescription,
+     * the patient page can show it automatically.
+     */
+
+    prescriptionRefreshTimer =
+        setInterval(
+            function() {
+
+                if (currentPatientId) {
+
+                    loadPrescriptions();
+                }
+
+            },
+            10000
+        );
+}
+
+
+/* ============================================================
+   STOP PRESCRIPTION AUTO REFRESH
+============================================================ */
+
+function stopPrescriptionAutoRefresh() {
+
+    if (
+        prescriptionRefreshTimer !== null
+    ) {
+
+        clearInterval(
+            prescriptionRefreshTimer
+        );
+
+        prescriptionRefreshTimer =
+            null;
+    }
+}
+
+
+/* ============================================================
+   FORMAT DATE
+============================================================ */
 
 function formatDate(
     value
@@ -2979,14 +3789,11 @@ function formatDate(
     ) {
 
         return "--";
-
     }
 
 
     const date =
-        new Date(
-            value
-        );
+        new Date(value);
 
 
     if (
@@ -2995,29 +3802,23 @@ function formatDate(
         )
     ) {
 
-        return String(
-            value
-        );
-
+        return String(value);
     }
 
 
     return date.toLocaleString();
-
 }
 
 
-/* =====================================================
-   HTML SAFETY
-===================================================== */
+/* ============================================================
+   HTML ESCAPE
+============================================================ */
 
 function escapeHtml(
     value
 ) {
 
-    return String(
-        value
-    )
+    return String(value)
 
         .replace(
             /&/g,
@@ -3043,39 +3844,37 @@ function escapeHtml(
             /'/g,
             "&#039;"
         );
-
 }
 
 
-/* =====================================================
-   =====================================================
-   PEERJS VIDEO CALL
-   =====================================================
-   ===================================================== */
+/* ============================================================
+   SLEEP
+============================================================ */
+
+function sleep(
+    milliseconds
+) {
+
+    return new Promise(
+        function(resolve) {
+
+            setTimeout(
+                resolve,
+                milliseconds
+            );
+
+        }
+    );
+}
 
 
-/* =====================================================
-   FIXED DOCTOR PEER ID
-===================================================== */
-
-/*
- * IMPORTANT:
- *
- * The doctor.html file MUST also create the doctor
- * PeerJS connection using this exact same ID:
- *
- *     INNOHACK-DOCTOR
- *
- * The patient no longer needs to enter the ID manually.
- */
+/* ============================================================
+   PEERJS
+============================================================ */
 
 const DOCTOR_PEER_ID =
     "INNOHACK-DOCTOR";
 
-
-/* =====================================================
-   PEERJS VARIABLES
-===================================================== */
 
 let patientPeer = null;
 
@@ -3083,10 +3882,6 @@ let patientLocalStream = null;
 
 let patientCurrentCall = null;
 
-
-/* =====================================================
-   UPDATE VIDEO STATUS
-===================================================== */
 
 function setVideoStatus(
     message,
@@ -3100,9 +3895,7 @@ function setVideoStatus(
 
 
     if (!element) {
-
         return;
-
     }
 
 
@@ -3121,7 +3914,6 @@ function setVideoStatus(
         element.classList.add(
             "connected"
         );
-
     }
 
 
@@ -3132,15 +3924,9 @@ function setVideoStatus(
         element.classList.add(
             "error"
         );
-
     }
-
 }
 
-
-/* =====================================================
-   START PATIENT VIDEO SERVICE
-===================================================== */
 
 async function startPatientVideo() {
 
@@ -3151,23 +3937,12 @@ async function startPatientVideo() {
         );
 
 
-        /*
-         * Get patient's camera and microphone.
-         */
-
         patientLocalStream =
             await navigator.mediaDevices.getUserMedia({
-
                 video: true,
-
                 audio: true
-
             });
 
-
-        /*
-         * Show patient's own camera.
-         */
 
         const selfVideo =
             document.getElementById(
@@ -3175,42 +3950,30 @@ async function startPatientVideo() {
             );
 
 
-        if (selfVideo) {
-
-            selfVideo.srcObject =
-                patientLocalStream;
-
-            selfVideo.muted = true;
-
-            await selfVideo.play()
-                .catch(
-                    function(error) {
-
-                        console.log(
-                            "Self video autoplay:",
-                            error
-                        );
-
-                    }
-                );
-
-        }
+        selfVideo.srcObject =
+            patientLocalStream;
 
 
-        /*
-         * Create Patient PeerJS connection.
-         *
-         * Patient still gets a temporary unique ID.
-         * This ID does not need to be shared.
-         */
+        selfVideo.muted = true;
+
+
+        await selfVideo
+            .play()
+            .catch(
+                function(error) {
+
+                    console.log(
+                        "SELF VIDEO:",
+                        error
+                    );
+
+                }
+            );
+
 
         patientPeer =
             new Peer();
 
-
-        /*
-         * Peer opened successfully.
-         */
 
         patientPeer.on(
             "open",
@@ -3223,69 +3986,34 @@ async function startPatientVideo() {
 
 
                 setVideoStatus(
-                    "🟢 Video service ready. Doctor connection is automatic."
+                    "🟢 Video service ready."
                 );
-
             }
         );
 
-
-        /*
-         * Handle PeerJS errors.
-         */
 
         patientPeer.on(
             "error",
             function(error) {
 
                 console.error(
-                    "PATIENT PEERJS ERROR:",
+                    "PEER ERROR:",
                     error
                 );
 
 
-                /*
-                 * If the doctor is offline or the
-                 * destination cannot be found, the
-                 * actual call will also report an error.
-                 */
-
                 setVideoStatus(
-                    "❌ Video service error: " +
+                    "❌ Video error: " +
                     error.type,
                     "error"
                 );
-
             }
         );
 
-
-        /*
-         * If the connection closes.
-         */
-
-        patientPeer.on(
-            "disconnected",
-            function() {
-
-                console.log(
-                    "Patient PeerJS disconnected."
-                );
-
-
-                setVideoStatus(
-                    "🟡 Video service disconnected."
-                );
-
-            }
-        );
-
-    }
-
-    catch (error) {
+    } catch (error) {
 
         console.error(
-            "PATIENT CAMERA ERROR:",
+            "CAMERA ERROR:",
             error
         );
 
@@ -3295,95 +4023,45 @@ async function startPatientVideo() {
             error.message,
             "error"
         );
-
-
-        alert(
-            "Camera or microphone could not be accessed.\n\n" +
-            "Please allow camera and microphone access.\n\n" +
-            error.message
-        );
-
     }
-
 }
 
 
-/* =====================================================
-   CALL DOCTOR
-===================================================== */
-
 async function callDoctor() {
-
-    /*
-     * The Doctor Peer ID is now fixed.
-     *
-     * Patient does NOT need to enter it.
-     */
-
-    const doctorId =
-        DOCTOR_PEER_ID;
-
-
-    console.log(
-        "CALLING FIXED DOCTOR PEER:",
-        doctorId
-    );
-
-
-    /*
-     * Patient PeerJS must be ready.
-     */
 
     if (!patientPeer) {
 
         alert(
-            "Video service is not ready yet.\n\n" +
-            "Please wait a few seconds and try again."
+            "Video service is not ready."
         );
 
         return;
-
     }
 
-
-    /*
-     * Camera and microphone must be ready.
-     */
 
     if (!patientLocalStream) {
 
         alert(
-            "Camera and microphone are not ready."
+            "Camera is not ready."
         );
 
         return;
-
     }
 
 
-    /*
-     * Close an old call if one exists.
-     */
-
-    if (
-        patientCurrentCall
-    ) {
+    if (patientCurrentCall) {
 
         patientCurrentCall.close();
-
-        patientCurrentCall =
-            null;
-
     }
 
 
-    const callButton =
+    const button =
         document.getElementById(
             "callDoctorButton"
         );
 
 
-    callButton.disabled = true;
+    button.disabled = true;
 
 
     setVideoStatus(
@@ -3391,293 +4069,136 @@ async function callDoctor() {
     );
 
 
-    try {
+    const call =
+        patientPeer.call(
+            DOCTOR_PEER_ID,
+            patientLocalStream
+        );
 
-        /*
-         * Start WebRTC call.
-         *
-         * The fixed Doctor Peer ID is used automatically.
-         */
 
-        const call =
-            patientPeer.call(
-                doctorId,
-                patientLocalStream
+    patientCurrentCall =
+        call;
+
+
+    call.on(
+        "stream",
+        async function(remoteStream) {
+
+            const video =
+                document.getElementById(
+                    "patientDoctorVideo"
+                );
+
+
+            video.srcObject =
+                remoteStream;
+
+
+            await video
+                .play()
+                .catch(
+                    function(error) {
+
+                        console.log(
+                            "DOCTOR VIDEO:",
+                            error
+                        );
+
+                    }
+                );
+
+
+            setVideoStatus(
+                "🟢 Connected to doctor.",
+                "connected"
             );
-
-
-        patientCurrentCall =
-            call;
-
-
-        /*
-         * Receive doctor's media stream.
-         */
-
-        call.on(
-            "stream",
-            async function(remoteStream) {
-
-                console.log(
-                    "DOCTOR VIDEO STREAM RECEIVED"
-                );
-
-
-                const doctorVideo =
-                    document.getElementById(
-                        "patientDoctorVideo"
-                    );
-
-
-                if (!doctorVideo) {
-
-                    return;
-
-                }
-
-
-                doctorVideo.srcObject =
-                    remoteStream;
-
-
-                try {
-
-                    await doctorVideo.play();
-
-                }
-
-                catch (error) {
-
-                    console.log(
-                        "Doctor video play:",
-                        error
-                    );
-
-                }
-
-
-                setVideoStatus(
-                    "🟢 Connected to doctor. Video consultation is active.",
-                    "connected"
-                );
-
-            }
-        );
-
-
-        /*
-         * Call closed.
-         */
-
-        call.on(
-            "close",
-            function() {
-
-                console.log(
-                    "DOCTOR CALL CLOSED"
-                );
-
-
-                patientCurrentCall =
-                    null;
-
-
-                callButton.disabled =
-                    false;
-
-
-                setVideoStatus(
-                    "🟡 Video call ended."
-                );
-
-
-                clearDoctorVideo();
-
-            }
-        );
-
-
-        /*
-         * Call error.
-         */
-
-        call.on(
-            "error",
-            function(error) {
-
-                console.error(
-                    "VIDEO CALL ERROR:",
-                    error
-                );
-
-
-                patientCurrentCall =
-                    null;
-
-
-                callButton.disabled =
-                    false;
-
-
-                setVideoStatus(
-                    "❌ Video call failed: " +
-                    error.message,
-                    "error"
-                );
-
-            }
-        );
-
-
-        /*
-         * Connection timeout safety.
-         */
-
-        setTimeout(
-            function() {
-
-                if (
-                    patientCurrentCall ===
-                    call
-                ) {
-
-                    console.log(
-                        "Still waiting for doctor stream."
-                    );
-
-                }
-
-            },
-            10000
-        );
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "CALL DOCTOR ERROR:",
-            error
-        );
-
-
-        callButton.disabled =
-            false;
-
-
-        setVideoStatus(
-            "❌ Could not call doctor: " +
-            error.message,
-            "error"
-        );
-
-    }
-
-}
-
-
-/* =====================================================
-   END PATIENT CALL
-===================================================== */
-
-function endPatientCall() {
-
-    console.log(
-        "ENDING PATIENT CALL"
+        }
     );
 
 
-    if (
-        patientCurrentCall
-    ) {
+    call.on(
+        "close",
+        function() {
+
+            patientCurrentCall = null;
+
+            button.disabled = false;
+
+            setVideoStatus(
+                "🟡 Video call ended."
+            );
+
+            clearDoctorVideo();
+        }
+    );
+
+
+    call.on(
+        "error",
+        function(error) {
+
+            console.error(
+                "CALL ERROR:",
+                error
+            );
+
+
+            patientCurrentCall = null;
+
+            button.disabled = false;
+
+
+            setVideoStatus(
+                "❌ Video call failed.",
+                "error"
+            );
+        }
+    );
+}
+
+
+function endPatientCall() {
+
+    if (patientCurrentCall) {
 
         patientCurrentCall.close();
 
-        patientCurrentCall =
-            null;
-
+        patientCurrentCall = null;
     }
 
 
     clearDoctorVideo();
 
 
-    const callButton =
-        document.getElementById(
-            "callDoctorButton"
-        );
-
-
-    if (callButton) {
-
-        callButton.disabled =
-            false;
-
-    }
+    document.getElementById(
+        "callDoctorButton"
+    ).disabled = false;
 
 
     setVideoStatus(
-        "🟡 Call ended. You can call the doctor again."
+        "🟡 Call ended."
     );
-
 }
 
 
-/* =====================================================
-   CLEAR DOCTOR VIDEO
-===================================================== */
-
 function clearDoctorVideo() {
 
-    const doctorVideo =
+    const video =
         document.getElementById(
             "patientDoctorVideo"
         );
 
 
-    if (!doctorVideo) {
+    if (video) {
 
-        return;
-
+        video.srcObject = null;
     }
-
-
-    if (
-        doctorVideo.srcObject
-    ) {
-
-        const tracks =
-            doctorVideo
-                .srcObject
-                .getTracks();
-
-
-        tracks.forEach(
-            function(track) {
-
-                track.stop();
-
-            }
-        );
-
-    }
-
-
-    doctorVideo.srcObject =
-        null;
-
 }
 
 
-/* =====================================================
-   STOP PATIENT CAMERA
-===================================================== */
-
 function stopPatientCamera() {
 
-    if (
-        patientLocalStream
-    ) {
+    if (patientLocalStream) {
 
         patientLocalStream
             .getTracks()
@@ -3685,38 +4206,35 @@ function stopPatientCamera() {
                 function(track) {
 
                     track.stop();
-
                 }
             );
 
 
-        patientLocalStream =
-            null;
-
+        patientLocalStream = null;
     }
-
 }
 
 
-/* =====================================================
-   PAGE LOAD
-===================================================== */
+/* ============================================================
+   INITIALIZATION
+============================================================ */
 
 updatePatientIdDisplay();
+
+updateHealthCheckButton();
 
 loadExistingPatient();
 
 
-/*
- * Start video service after the page loads.
- *
- * If the browser blocks automatic camera permission,
- * the browser will ask the user.
- */
-
 window.addEventListener(
     "load",
     function() {
+
+        /*
+         * Video starts here.
+         *
+         * SENSOR CONTROLLER DOES NOT START HERE.
+         */
 
         startPatientVideo();
 
@@ -3724,29 +4242,35 @@ window.addEventListener(
 );
 
 
-/* =====================================================
-   PAGE CLOSE
-===================================================== */
+/*
+ * Start prescription automatic refresh.
+ */
+
+startPrescriptionAutoRefresh();
+
+
+/* ============================================================
+   CLEANUP
+============================================================ */
 
 window.addEventListener(
     "beforeunload",
     function() {
 
-        if (
-            patientCurrentCall
-        ) {
+        stopPolling();
+
+        stopPrescriptionAutoRefresh();
+
+
+        if (patientCurrentCall) {
 
             patientCurrentCall.close();
-
         }
 
 
-        if (
-            patientPeer
-        ) {
+        if (patientPeer) {
 
             patientPeer.destroy();
-
         }
 
 
@@ -3754,7 +4278,6 @@ window.addEventListener(
 
     }
 );
-
 
 </script>
 

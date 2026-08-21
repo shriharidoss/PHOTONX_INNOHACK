@@ -1,0 +1,321 @@
+
+==============================================
+       MEDICAL SENSOR CONTROLLER
+              WIFI VERSION
+==============================================
+
+Project directory:
+C:\Users\shrih\OneDrive\Documents\PHOTONX_INNOHACK\medical_sensor_backend
+
+ESP32 Wi-Fi address:
+10.34.20.179
+
+==============================================
+ CURRENT PATIENT
+==============================================
+
+CURRENT PATIENT ID: 28
+
+This measurement belongs to Patient: 28
+
+Old file deleted: C:\Users\shrih\OneDrive\Documents\PHOTONX_INNOHACK\medical_sensor_backend\data\vitals_result.json
+Old file deleted: C:\Users\shrih\OneDrive\Documents\PHOTONX_INNOHACK\medical_sensor_backend\data\temperature.json
+Old file deleted: C:\Users\shrih\OneDrive\Documents\PHOTONX_INNOHACK\medical_sensor_backend\data\raw\ppg_recording.csv
+
+==============================================
+ CONNECTING TO ESP32 OVER WI-FI
+==============================================
+
+ESP32 IP: 10.34.20.179
+
+ESP32 Wi-Fi connection successful.
+
+ESP32 status:
+{
+    "wifi": "connected",
+    "ip": "10.34.20.179",
+    "measurement": "complete",
+    "samples": 401,
+    "temperature": 26.87,
+    "temperature_sensor": "detected"
+}
+
+ESP32 reset:
+{
+    "status": "reset"
+}
+
+==============================================
+ STARTING SENSOR MEASUREMENT
+==============================================
+
+CURRENT PATIENT: 28
+
+Place your finger on MAX30102.
+Keep your finger still.
+
+Starting PPG + temperature collection...
+
+ESP32 start response:
+{
+    "status": "measurement_started"
+}
+
+==============================================
+ COLLECTING SENSOR DATA
+==============================================
+
+Measurement duration: 10 seconds
+
+ESP32: running | samples: 8 | temperature: None
+ESP32: running | samples: 72 | temperature: None
+ESP32: running | samples: 170 | temperature: None
+ESP32: running | samples: 222 | temperature: None
+ESP32: running | samples: 268 | temperature: None
+ESP32: running | samples: 342 | temperature: None
+ESP32: running | samples: 384 | temperature: None
+ESP32: complete | samples: 400 | temperature: 28.06
+
+==============================================
+ ESP32 REPORTED MEASUREMENT COMPLETE
+==============================================
+
+==============================================
+ DOWNLOADING SENSOR DATA
+==============================================
+
+
+==============================================
+ SENSOR COLLECTION COMPLETE
+==============================================
+
+Patient ID: 28
+Collected PPG samples: 400
+Temperature received: 28.06
+Measurement complete: True
+
+PPG recording saved:
+C:\Users\shrih\OneDrive\Documents\PHOTONX_INNOHACK\medical_sensor_backend\data\raw\ppg_recording.csv
+
+==============================================
+ SAVING TEMPERATURE
+==============================================
+
+Temperature saved:
+28.06 °C
+
+==============================================
+ RUNNING VITAL ANALYSIS
+==============================================
+
+Patient ID: 28
+PPG samples: 400
+Temperature: 28.06 °C
+
+
+==============================================
+       VITAL SIGN ANALYSIS
+==============================================
+
+No patient ID argument received.
+Reading patient_session.json...
+
+==============================================
+ CURRENT PATIENT
+==============================================
+
+CURRENT PATIENT ID: 28
+
+==============================================
+ READING TEMPERATURE
+==============================================
+
+Temperature file:
+C:\Users\shrih\OneDrive\Documents\PHOTONX_INNOHACK\medical_sensor_backend\data\temperature.json
+
+Temperature JSON received:
+{
+    "patient_id": 28,
+    "temperature": 28.06
+}
+
+Current patient: 28
+Temperature patient: 28
+
+Temperature patient ID verified.
+Temperature: 28.06 °C
+
+PPG input file:
+C:\Users\shrih\OneDrive\Documents\PHOTONX_INNOHACK\medical_sensor_backend\data\raw\ppg_recording.csv
+
+CSV loaded.
+Total samples: 400
+
+Valid samples: 400
+
+Estimated sampling rate: 47.62 Hz
+Median sample interval: 21.0 ms
+
+Nyquist frequency: 23.81 Hz
+
+PPG filter:
+Low cutoff: 0.5 Hz
+High cutoff: 4.0 Hz
+
+==============================================
+ HEART RATE
+==============================================
+
+Signal standard deviation: 134.4449
+Peak prominence: 13.4445
+
+Pulse peaks detected: 13
+
+Pulse intervals:
+[0.336 0.63  0.966 0.399 0.462 0.441 1.323 0.567 0.42  0.462 0.567 0.84 ]
+
+Valid pulse intervals: 12
+
+Heart Rate: 116.62 BPM
+
+==============================================
+ SpO2
+==============================================
+
+SpO2: 76.85 %
+
+==============================================
+ BLOOD PRESSURE - ML
+==============================================
+
+Running BP ML model...
+
+C:\Users\shrih\AppData\Local\Programs\Python\Python313\Lib\site-packages\sklearn\base.py:525: InconsistentVersionWarning: Trying to unpickle estimator StandardScaler from version 1.8.0 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+
+==============================================
+ FINAL VITALS
+==============================================
+
+Patient ID: 28
+Temperature: 28.06 °C
+Heart Rate: 116.62 BPM
+SpO2: 76.85 %
+Blood Pressure: 108.55 / 64.94 mmHg
+
+Complete JSON:
+{
+    "patient_id": 28,
+    "temperature": 28.06,
+    "heart_rate": 116.62,
+    "spo2": 76.85,
+    "systolic_bp": 108.55,
+    "diastolic_bp": 64.94
+}
+
+JSON saved:
+C:\Users\shrih\OneDrive\Documents\PHOTONX_INNOHACK\medical_sensor_backend\data\vitals_result.json
+
+==============================================
+ ANALYSIS COMPLETE
+==============================================
+
+
+analyze_vitals.py returned: 0
+
+
+==============================================
+ FINAL VITALS
+==============================================
+
+Patient ID: 28
+
+Temperature: 28.06 °C
+Heart Rate: 116.62 BPM
+SpO2: 76.85 %
+Blood Pressure: 108.55 / 64.94 mmHg
+
+Complete result:
+{
+    "patient_id": 28,
+    "temperature": 28.06,
+    "heart_rate": 116.62,
+    "spo2": 76.85,
+    "systolic_bp": 108.55,
+    "diastolic_bp": 64.94
+}
+
+==============================================
+ SENDING RESULT TO FLASK
+==============================================
+
+
+================================
+ MEDICAL SENSOR DATA
+================================
+
+{
+    "patient_id": 28,
+    "temperature": 28.06,
+    "heart_rate": 116.62,
+    "spo2": 76.85,
+    "systolic_bp": 108.55,
+    "diastolic_bp": 64.94
+}
+
+================================
+ SENDING TO FLASK
+================================
+
+{
+    "patient_id": 28,
+    "temperature": 28.06,
+    "heart_rate": 116.62,
+    "spo2": 76.85,
+    "systolic_bp": 108.55,
+    "diastolic_bp": 64.94
+}
+
+================================
+ FLASK RESPONSE
+================================
+
+HTTP Status: 200
+{
+  "data": {
+    "diastolic_bp": 64.94,
+    "heart_rate": 116.62,
+    "patient_id": 28,
+    "spo2": 76.85,
+    "systolic_bp": 108.55,
+    "temperature": 28.06
+  },
+  "message": "Vitals saved to database",
+  "reading_id": 63,
+  "status": "success"
+}
+
+
+================================
+ SUCCESS
+================================
+Vitals successfully sent to Flask.
+Patient ID: 28
+
+==============================================
+       HEALTH CHECK COMPLETE
+==============================================
+
+Patient ID: 28
+Temperature: 28.06 °C
+Heart Rate: 116.62 BPM
+SpO2: 76.85 %
+Blood Pressure: 108.55 / 64.94 mmHg
+
+Data stored in Flask/MySQL.
+
+==============================================
+              ALL DONE
+==============================================
+
